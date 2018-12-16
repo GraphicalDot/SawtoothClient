@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+message Account {
+    string parent_zero_pub=1; //this will help is going back to the addres of parent
+    string user_id = 2;
+    string adhaar = 3;
+    string phone_number = 4;
+    string pancard = 5;
+    string first_name = 6;
+    string last_name = 7;
+    string organization_name=8;
+    string email=9;
+    uint32 time=10;
+    string indian_time=11;
+    bool deactivate=12; //in case the lab has been closed.
+    string deactivate_on=13; //in case the lab has been closed.
+    bool last_active=14; //the time stamp at which this account was active
+    repeated uint32	float_account_idxs=15;
+    repeated uint32	share_asset_idxs=16 [packed=true];
+    repeated uint32	create_asset_idxs=17 [packed=true];
+    repeated uint32	receive_asset_idxs=18 [packed=true];
+    repeated uint32	child_account_idxs=19 [packed=true];
+    string role=20;
+    string parent_role=21;
+    string parent_pub=22;
+    string public=23;
+
+}

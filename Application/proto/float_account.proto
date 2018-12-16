@@ -1,0 +1,38 @@
+
+
+syntax = "proto3";
+
+
+message FloatAccount {
+    string org_name=1;
+    string pancard = 2;
+    string phone_number = 3;
+    string email = 4;
+    string gst_number=5;
+    string tan_number=6;
+    bool claimed =7;
+    string claimed_by=8; //user zero_public_key who claimed this address, from
+                        //this public key we can generated account address
+    repeated uint32 create_asset_idxs = 9 [packed=true];
+    uint32 parent_idx=10;
+    uint32 time=11; //when this float account transaction was created
+    string indian_time=12;
+    string claimed_on=13;
+    string parent_role=14;
+    string role=15;
+    string parent_zero_pub=16; //This is required but will not be on blockchain
+                //This is required because from this value we will calculate
+                //the parent account address on which this parent_idx will be
+                //appended under create_flt_idxs
+
+    //The final transaction on the blockchain will also have a public key which will
+    // the public key with which this transaction was created
+    string child_zero_pub=20; //In case the child is making this float account,
+      //the flt_acc_idx will be genrated from orgnization account
+      //must also be appended to child account
+    string signed_nonce = 17;
+    uint32 nonce = 18;
+    string nonce_hash= 19;
+    string public=21;
+
+}

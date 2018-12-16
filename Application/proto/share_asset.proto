@@ -1,0 +1,37 @@
+
+
+
+syntax = "proto3";
+message ShareAsset {
+    string key=1; //encrypted AES key with child parent org prsent at
+                                            //  receive_asset transaction
+    string url=2; //s3 url encrypted with child parent org prsent at
+                                        //receive_asset transaction
+    string master_key=3;
+    string master_url=4;
+
+    uint32 time=5; //when this asset was created
+    string indiantime=6; //time in indian format
+    string file_name=7;
+    string file_hash=8;
+    string original_asset_address=9;
+
+    float revoked_on=10; //the date on which this certificate is intended
+                        //to expire.
+
+    string comments = 13; //any cooments which sharer wants to add
+    uint32 idx=14;
+    string account_signature = 15; //signed by the account zeroth private key
+    string asset_signature = 16; //created by the original asset private at idx
+    uint32 nonce = 17;
+    string nonce_hash=18;
+    string issuer_account_address=19;
+    string child_zero_pub= 20;//in case a child is sharing this asset to another party
+
+    string to_org_name=21;
+    string to_org_address=22;
+    string receive_asset_address=23;
+    string public=24;
+    string unique_code_hash=25;
+
+}

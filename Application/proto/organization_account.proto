@@ -1,0 +1,33 @@
+
+
+syntax = "proto3";
+
+
+
+message OrganizationAccount {
+    string parent_zero_pub=1; //this will help is going back to the addres of parent
+    string org_name=2;
+    string email=3;
+    string pancard=4;
+    string gst_number=5;
+    string tan_number=6;
+    string phone_number=7;
+
+    uint32 time=8;
+    string indian_time=9;
+    bool deactivate=10; //in case the lab has been closed.
+    string deactivate_on=11; //in case the lab has been closed.
+    string role=12;
+    string parent_role=14;
+    string parent_pub=15;
+    uint32 parent_idx=16;
+    repeated uint32	float_account_idxs=17;
+    repeated uint32	child_account_idxs=18;
+    repeated uint32	create_asset_idxs=19;
+    repeated uint32	share_asset_idxs=20;
+    repeated uint32	receive_asset_idxs=21;
+
+    string user_id=22;
+    string float_account_address=23;
+    string public=24;
+}

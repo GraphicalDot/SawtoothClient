@@ -1,0 +1,59 @@
+
+syntax = "proto3";
+
+
+message Asset {
+    string key=1; //encrypted AES key with user publickey present at random index
+    string url=2; //s3 url encrypted with user public key
+    uint32 time=3; //when this asset was created
+    string indiantime=4; //time in indian format
+    string file_name=5;
+    string file_hash=6;
+    uint32 idx=7;
+    string master_key =8; // encrypted AES key wth master,
+    string master_url =9; // encrypted s3 url, encrypted with aes key
+                          // generated with private key of user and
+                          // public of QCI
+
+
+    float expired_on=10; //the date on which this certificate is intended
+                        //to expire.
+    string role=11;
+    Scope scope=12;
+    repeated Signatures authenticity_signatures= 13;
+    string ownership_transfer= 14; //will be a public key to which it was
+                                //transffered
+    string transferred_on=15; //when the ownership of the asset was transfered
+
+
+    string ownership_received=16; //In case this asset has been received, public key
+                            //of the issuer
+    string received_on=17;
+    string parent_address=18; //required tp track the origin of the certificate
+
+    //string flt_account_parent_pub=19;//Incase the user only have float account address
+    //uint32 flt_account_parent_idx = 20;
+
+    string public =21; //public key at idx from which this transaction was generated
+    repeated uint32 shared_with=22;
+    string child_zero_pub=23; //if in case this create asset has been made by a child of the orgnization
+    string issuer_child_zero_pub=24; //in case some child transffered as asset to this empty asset
+
+}
+
+message Scope {
+    string group=1;
+    string sub_group=2;
+    string field=3;
+    string nature=4;
+    string operations=5;
+    string description=6;
+
+}
+
+message Signatures {
+    string address=1;
+    uint32 nonce=2;
+    string signed_nonce=3;
+
+}

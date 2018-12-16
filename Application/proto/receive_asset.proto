@@ -1,0 +1,32 @@
+
+syntax = "proto3";
+
+
+//The user hw wants to receive a
+message ReceiveAsset {
+    string _id_=14;
+    uint32 time=1; //when this asset was created
+    string indiantime=2; //time in indian format
+    uint32 idx=3;
+    //string public=4; //only will be on blokchchain, can be calculated as header.signer.public_key
+    float at_which_asset_expires=5;
+
+    string org_name=6;  //so people can identify orgnization name
+    string org_address=7;
+    string org_role=8;
+    CReceiveAssetDetails receive_asset_details = 9;
+    string child_zero_pub=10;
+    string signed_nonce = 11; //signed with account zeroth pub or childs parent zeroth public
+    uint32 nonce = 12;
+    string nonce_hash= 13;
+    string public=15;
+    string unique_code_hash=16;
+    string encrypted_unique_code=17;
+    string encrypted_admin_unique_code=18;
+}
+
+
+message CReceiveAssetDetails {
+    string name=1;
+    string description=5;
+}

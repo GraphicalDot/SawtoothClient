@@ -1,0 +1,345 @@
+syntax = "proto3";
+
+
+message TransactionPayload {
+
+    enum PayloadType {
+        TYPE_UNSET = 0;
+        CREATE_ORGANIZATION_ACCOUNT = 2;
+        CREATE_FLOAT_ACCOUNT = 3;
+        CREATE_CHILD_ACCOUNT=8;
+        CREATE_ASSET =4;
+        SHARE_ASSET = 5;
+        REVOKE_ASSET = 6;
+        TRANSFER_ASSET = 7;
+        RECEIVE_ASSET=9;
+    }
+
+      PayloadType payload_type = 1;
+
+      CreateUserAccount create_user_account = 2;
+
+      CreateOrganizationAccount create_organization_account = 3;
+
+      CreateChildAccount create_child_account = 4;
+
+
+      CreateFloatAccount create_float_account = 5;
+      CreateAsset create_asset = 6;
+      CreateShareAsset share_asset=7;
+      CreateTransferAsset transfer_asset=8;
+      CreateReceiveAsset receive_asset=9;
+    }
+
+
+
+message CreateFloatAccount {
+    string org_name=1;
+    string pancard = 2;
+    string phone_number = 3;
+    string email = 4;
+    string gst_number=5;
+    string tan_number=6;
+    bool claimed =7;
+    string claimed_by=8; //user zero_public_key who claimed this address, from
+                        //this public key we can generated account address
+    repeated uint32 create_asset_idxs = 9 [packed=true];
+    uint32 parent_idx=10;
+    uint32 time=11; //when this float account transaction was created
+    string indian_time=12;
+    string claimed_on=13;
+    string parent_role=14;
+    string role=15;
+    string parent_zero_pub=16; //This is required but will not be on blockchain
+                //This is required because from this value we will calculate
+                //the parent account address on which this parent_idx will be
+                //appended under create_flt_idxs
+
+    //The final transaction on the blockchain will also have a public key which will
+    // the public key with which this transaction was created
+    string signed_nonce = 17;
+    uint32 nonce = 18;
+    string nonce_hash= 19;
+    string child_zero_pub=21; //In case the child is making this float account,
+      //the flt_acc_idx will be genrated from orgnization account
+      //must also be appended to child account
+
+}
+
+message CreateOrganizationAccount {
+    string parent_zero_pub=1; //this will help is going back to the addres of parent
+    string org_name=2;
+    string email=3;
+    string pancard=4;
+    string gst_number=5;
+    string tan_number=6;
+    string phone_number=7;
+
+    uint32 time=8;
+    string indian_time=9;
+    bool deactivate=10; //in case the lab has been closed.
+    string deactivate_on=11; //in case the lab has been closed.
+    string role=12;
+    string parent_role=14;
+    string parent_pub=15;
+    uint32 parent_idx=16;
+    repeated uint32	float_account_idxs=17;
+    repeated uint32	child_account_idxs=18;
+    repeated uint32	create_asset_idxs=19;
+    repeated uint32	share_asset_idxs=20;
+    repeated uint32	receive_asset_idxs=21;
+
+    string user_id=22;
+    string float_account_address=23;
+}
+
+
+
+//Admin will have an organization account and A random key will be generated from
+//and the key will be added to the float_account_idxs and a new flt_acc transaction
+//will be floated, which will hang till child will claim it
+
+
+
+message CreateChildAccount {
+    string user_id = 1;
+    string phone_number = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string email=5;
+    string pancard=6;
+    string gst_number=7;
+    string tan_number=8;
+    string org_name=9;
+
+    uint32 time=10;
+    string indian_time=11;
+    bool deactivate=12; //in case the lab has been closed.
+    string deactivate_on=13; //in case the lab has been closed.
+    repeated uint32	float_account_idxs=14;
+    repeated uint32	create_asset_idxs=15 [packed=true]; //asset whose ownership
+                                          //has been transferred to him.
+
+    repeated uint32	share_asset_idxs=16 [packed=true];
+    repeated uint32	receive_asset_idxs=17 [packed=true];
+
+    string role=18;
+
+    string parent_role=19;
+    uint32 parent_idx=20;
+    string parent_zero_pub=21;
+
+    string signed_nonce = 22;
+    uint32 nonce = 23;
+    string nonce_hash= 24;
+
+}
+
+
+
+
+
+message CreateUserAccount {
+    string parent_zero_pub=1; //this will help is going back to the addres of parent
+    string user_id = 2;
+    string adhaar = 3;
+    string phone_number = 4;
+    string pancard = 5;
+    string first_name = 6;
+    string last_name = 7;
+    string email=9;
+    uint32 time=10;
+    string indian_time=11;
+    bool deactivate=12; //in case the lab has been closed.
+    string deactivate_on=13; //in case the lab has been closed.
+    bool last_active=14; //the time stamp at which this account was active
+    repeated uint32	float_account_idxs=15;
+    repeated uint32	create_asset_idxs=16 [packed=true]; //asset whose ownership
+                                          //has been transferred to him.
+
+    repeated uint32	share_asset_idxs=17 [packed=true];
+    repeated uint32	receive_asset_idxs=19 [packed=true];
+    string role=21;
+    string parent_role=22;
+    string parent_pub=23;
+    uint32 parent_idx=24;
+    string public=25;
+
+}
+
+
+
+//THe user will create a new asset generated from some random index, the user
+//role will be same as users
+
+//Now the other user who will own this asset, will generate a new radom index at the
+// asset_owners_idxs and
+//now the ownership_transfer key in parent createAsset transaction  will have the
+//address generated from the public key as asset_owners_idxs
+
+
+//This asset ownership cant be transffered to multiple users,
+//Issuer creates an asset
+// User creates an empty asset
+// Transfer asset transaction will be issued to an API,
+//which will have parent account address, create_asset_idx and the user create_asset_idx
+
+//Or, if we are doing everything on the APIs side without user owning the keys
+// Parent just have the email_id and adhaar of the user
+// Parent creates an asset at a random index in create_asset_idxs array,
+//creates a create_asset trasaction with the certificate data,
+//Another random key will be generated from user random index at create_asset_idxs
+//User floats an empty create_asset transaction
+//Now a seperate TRANSFER_ASSET transaction will be floated which will
+
+message CreateAsset {
+    string key=1; //encrypted AES key with user publickey present at random index
+    string url=2; //s3 url encrypted with user public key
+    uint32 time=3; //when this asset was created
+    string indiantime=4; //time in indian format
+    string file_name=5;
+    string file_hash=6;
+    uint32 idx=7;
+    string master_key =8; // encrypted AES key wth master,
+    string master_url =9; // encrypted s3 url, encrypted with aes key
+                          // generated with private key of user and
+                          // public of QCI
+
+
+    float expired_on=10; //the date on which this certificate is intended
+                        //to expire.
+    string role=11;
+    PayloadScope scope=12;
+    repeated _Signatures authenticity_signatures= 13;
+    string ownership_transfer= 14; //will be a public key to which it was
+                                //transffered
+    string transferred_on=15; //when the ownership of the asset was transfered
+
+
+    string ownership_received=16; //In case this asset has been received, public key
+                            //of the issuer
+    string received_on=17;
+    string zero_pub =18; //Not to be stored on ledger, just required to process transaction
+                        //to change create_asset_idxs array on the account_transaction
+    string parent_address=19; //required tp track the origin of the certificate
+
+    string flt_account_parent_pub=20;//Incase the user only have float account address
+    uint32 flt_account_parent_idx = 21;
+    repeated uint32 shared_with=22; //account addresses with whom this asset has been shared
+    string child_zero_pub=23; //if in case this create asset has been made by a child of the orgnization
+    string issuer_child_zero_pub=24; //in case some child transffered as asset to this empty asset
+
+}
+
+
+//The user hw wants to receive a
+message CreateTransferAsset {
+    string key=1; //encrypted AES key with user publickey of the user presnet
+    string url=2; //s3 url encrypted with user public key
+    uint32 time=3; //when this asset was created
+    string indiantime=4; //time in indian format
+    string file_name=5;
+    string file_hash=6;
+    string master_key =9; // encrypted AES key wth master,
+    string master_url =10; // encrypted s3 url, encrypted with aes key
+                          // generated with private key of user and
+                          // public of QCI
+
+    float expired_on=13; //the date on which this certificate is intended
+                        //to expire.
+    PayloadScope scope=16;
+    string receiver_address=19;
+    string issuer_address=20;
+    string issuer_pub=21; //public key of the receiver create asset address
+    string issuer_zero_pub=22;
+    string signed_nonce = 23;
+    uint32 nonce = 24;
+    string issuer_child_zero_pub = 25;
+}
+
+
+
+message CreateShareAsset {
+    string key=1; //encrypted AES key with child parent org prsent at
+                                            //  receive_asset transaction
+    string url=2; //s3 url encrypted with child parent org prsent at
+                                        //receive_asset transaction
+    string master_key=3;
+    string master_url=4;
+
+    uint32 time=5; //when this asset was created
+    string indiantime=6; //time in indian format
+    string file_name=7;
+    string file_hash=8;
+    string original_asset_address=9;
+
+    float revoked_on=10; //the date on which this certificate is intended
+                        //to expire.
+
+    string comments = 13; //any cooments which sharer wants to add
+    uint32 idx=14;
+    string account_signature = 15; //signed by the account zeroth private key
+    string asset_signature = 16; //created by the original asset private at idx
+    uint32 nonce = 17;
+    string nonce_hash=18;
+    string issuer_account_address=19;
+    string child_zero_pub= 20;//in case a child is sharing this asset to another party
+
+    string to_org_name=21;
+    string to_org_address=22;
+    string receive_asset_address=23;
+    string unique_code_hash=24;
+}
+
+
+
+
+
+//The user hw wants to receive a
+message CreateReceiveAsset {
+    string _id_=1;
+    uint32 time=2; //when this asset was created
+    string indiantime=3; //time in indian format
+    uint32 idx=4;
+    //string public=5; //only will be on blokchchain, can be calculated as header.signer.public_key
+    float at_which_asset_expires=6;
+
+    string org_name=7;  //so people can identify orgnization name
+    string org_address=8;
+    string org_role=9;
+    ReceiveAssetDetails receive_asset_details = 10;
+    string child_zero_pub=11;
+    string signed_nonce = 12; //signed with account zeroth pub or childs parent zeroth public
+    uint32 nonce = 13;
+    string nonce_hash= 14;
+    string org_zero_pub=15;
+    string unique_code_hash=16;
+    string encrypted_unique_code=17;
+    string encrypted_admin_unique_code=18;
+
+}
+
+
+message ReceiveAssetDetails {
+    string name=1;
+    string description=5;
+}
+
+
+
+message PayloadScope {
+    string group=1;
+    string sub_group=2;
+    string field=3;
+    string nature=4;
+    string operations=5;
+    string description=6;
+
+}
+
+message _Signatures {
+    string address=1;
+    uint32 nonce=2;
+    string signed_nonce=3;
+
+}

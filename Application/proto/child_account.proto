@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+
+message ChildAccount {
+    string user_id = 1;
+    string phone_number = 2;
+    string first_name = 3;
+    string last_name = 4;
+    string email=5;
+    string pancard=6;
+    string gst_number=7;
+    string tan_number=8;
+    string org_name=9;
+
+    uint32 time=10;
+    string indian_time=11;
+    bool deactivate=12; //in case the lab has been closed.
+    string deactivate_on=13; //in case the lab has been closed.
+    repeated uint32	float_account_idxs=14;
+    repeated uint32	create_asset_idxs=15 [packed=true]; //asset whose ownership
+                                          //has been transferred to him.
+
+    repeated uint32	share_asset_idxs=16 [packed=true];
+    repeated uint32	receive_asset_idxs=17 [packed=true];
+
+    string role=18;
+
+    string parent_role=19;
+    uint32 parent_idx=20;
+    string parent_zero_pub=21;
+
+    string signed_nonce = 22;
+    uint32 nonce = 23;
+    string nonce_hash= 24;
+    string public=25;
+
+}

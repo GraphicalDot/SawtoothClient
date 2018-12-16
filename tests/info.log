@@ -1,0 +1,2 @@
+[32m18:40:27[0m - [34murllib3.connectionpool[0m - [1;30mDEBUG[0m - [32mStarting new HTTP connection (1): jsonplaceholder.typicode.com:80[0m
+[32m18:40:27[0m - [34murllib3.connectionpool[0m - [1;30mDEBUG[0m - [32mhttp://jsonplaceholder.typicode.com:80 "GET /todos HTTP/1.1" 200 None[0m
