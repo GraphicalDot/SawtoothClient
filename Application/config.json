@@ -3,18 +3,16 @@
     "SECRET_KEY": false,
     "ADMIN_MNEMONIC": false,
     "BATCHER_PRIVATE_KEY": false,
-    "ADMIN_PASSWORD": "1234",
-    "ADMIN_ZERO_PUB": "03e30ec15621fed45de0b97beae304bbeb4cf2bd919512a44c4d56e79d7e51c39f",
+    "ADMIN_PASSWORD": "@995-@849-@132-@@3",
+    "ADMIN_ZERO_PUB": "039f81d80234bc8c5c502718c54a670e13457053672786cc5dc70127536a875b8f",
     "ADMIN_ZERO_PRIV": null,
     "ADMIN_MSTR_PUB": null,
     "ADMIN_MSTR_PRIV": null,
-    "ADMIN_EMAIL": "admin@qcin.org",
+    "ADMIN_EMAIL": "admin@remedium.in",
     "ADMIN_GST_NUMBER": "TQ5EMV8J3D4MHHK",
     "ADMIN_TAN_NUMBER": "ZPSYST74JB",
     "REST_API_URL": "172.28.128.4:8008",
-    "ADMIN_ORG_NAME": "Quality council of India",
-    "ADMIN_PANCARD":"AIAPV9987K",
-    "CERT_MIN_DURATION": null,
+    "ADMIN_ORG_NAME": "Remedium",
     "HOST": "0.0.0.0",
     "PORT": 8000,
     "TIMEOUT": 60,
@@ -23,34 +21,28 @@
     "CONTEXT": false,
     "SIGNER": false,
     "DATABASE":{
-            "ip": "13.232.172.238",
+            "ip": "172.28.128.3",
             "port": 28015,
-            "secret_table": "secrets",
-            "dbname": "main_db",
-            "user": "adminuser",
-            "password": "VandeMATRAM90990",
+            "dbname": "remediumdb",
+            "user": "remedium",
+            "password": "CLOCK768WORK768orange768@@",
             "users": "users",
-            "pending_users": "pending_users",
             "assets": "assets",
             "transfer_asset": "transfer_assets",
             "share_asset": "share_assets",
             "receive_asset": "receive_assets",
-            "public_keys": "public_keys",
             "otp_email": "otp_email",
-            "otp_mobile": "otp_mobile"
+            "otp_mobile": "otp_mobile",
+            "otp_table": "otp_table"
 
               },
 
     "STORAGE":{
-          "BUCKET_NAME": "distributedauthentication",
+          "BUCKET_NAME": "remediumassets",
           "users_bucket_folder": "users",
-          "S3_OBJECT_TAGS": {"TagSet": [{"Key": "Environment", "Value": "test"},
-                                {"Key": "Project", "Value": "NABL-Gem"}
-                                ]},
           "AWS_REGION_NAME": "ap-south-1",
           "AWS_SECRET_KEY": null,
           "AWS_ACCESS_KEY": null,
-          "add_db_support": null
             },
 
     "BLOCKCHAIN": {
@@ -62,14 +54,6 @@
       },
 
     "GOAPI_URL": "172.28.128.1:8001",
-    "ALLOWED_ROLES": ["MASTER", "LAB", "CHILD", "USER", "ADMIN", "CONSUMER"],
-    "ROLES": {
-        "ADMIN": ["MASTER", "CONSUMER", "CHILD"],
-        "MASTER": ["LAB", "CHILD"],
-        "LAB": ["USER", "CHILD"],
-        "CHILD": ["LAB", "USER"],
-        "USER": null
-    },
     "TYPE": ["ORGANIZATION", "CHILD"]
 
 }
