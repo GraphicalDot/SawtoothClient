@@ -19,7 +19,7 @@ import binascii
 import coloredlogs, logging
 coloredlogs.install()
 
-FAMILY_NAME = 'accredit_users'
+FAMILY_NAME = 'remedium_healthcare'
 
 
 NS = hashlib.sha512(FAMILY_NAME.encode()).hexdigest()[:6]

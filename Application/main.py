@@ -30,12 +30,16 @@ from sawtooth_signing.secp256k1 import Secp256k1PrivateKey
 from sawtooth_signing import CryptoFactory
 from zmq.asyncio import ZMQEventLoop
 from remotecalls.remote_calls import  from_mnemonic
-from users.login import USERS_BP
-import users.utils as user_utils
+#from users.login import USERS_BP
+import routes.utils as route_utils
 from errors.errors import ERRORS_BP
-from upload.assetsapis import UPLOAD_BP
-from users.useraccounts import USER_ACCOUNTS_BP
-from ledger.accounts.create_organization_account.submit_create_organization_account import submit_admin_account
+#from users.userapi import USER_ACCOUNTS_BP
+from ledger.accounts.organization_account.submit_organization_account import submit_admin_account
+
+from routes.r_accounts import ACCOUNTS_BP
+from routes.r_assets import ASSETS_BP
+
+
 
 app = Sanic(__name__)
 import coloredlogs, logging
@@ -66,6 +70,10 @@ def parse_args(args):
                         help='The AWS access key')
     parser.add_argument('--admin_mnemonic',
                         help='The Mnemonic for ADMIN account')
+
+    parser.add_argument('--admin_password',
+                        help='The Password for ADMIN account')
+
     return parser.parse_args(args)
 
 
@@ -94,6 +102,12 @@ def load_config(app):  # pylint: disable=too-many-branches
             logging.error("Invalid Menmonic length")
             sys.exit()
         app.config.ADMIN_MNEMONIC = opts.admin_mnemonic
+
+    if opts.admin_password is not None:
+        if hashlib.sha512(opts.admin_password.ecnode()).hexdigest() !=\
+            app.config.ADMIN_PASSWORD:
+            logging.error("Invalid password")
+            sys.exit(1)
 
 
 
@@ -174,10 +188,12 @@ def main():
     #app.blueprint(ERRORS_BP)
     #app.blueprint(ASSETS_BP)
     load_config(app)
-    app.blueprint(USERS_BP)
+    app.blueprint(ACCOUNTS_BP)
     app.blueprint(ERRORS_BP)
-    app.blueprint(UPLOAD_BP)
-    app.blueprint(USER_ACCOUNTS_BP)
+    app.blueprint(ASSETS_BP)
+    #app.blueprint(USER_ACCOUNTS_BP)
+    for handler, (rule, router) in app.router.routes_names.items():
+        print(rule)
     zmq = ZMQEventLoop()
     asyncio.set_event_loop(zmq)
     server = app.create_server(
@@ -203,8 +219,10 @@ def main():
     if not admin:
         admin = loop.run_until_complete(user_utils.new_account(app, \
                         app.config.ADMIN_PANCARD,
-                        None, None, "ADMIN", app.config.ADMIN_GST_NUMBER,
+                        app.config.ADMIN_PHONE_NUMBER, app.config.ADMIN_EMAIL, \
+                        "ADMIN", app.config.ADMIN_GST_NUMBER,
                         app.config.ADMIN_TAN_NUMBER, app.config.ADMIN_ORG_NAME))
+
         mnemonic ,admin = loop.run_until_complete(user_utils.set_password(
                     app, admin, app.config.ADMIN_PASSWORD, pancard=None))
 

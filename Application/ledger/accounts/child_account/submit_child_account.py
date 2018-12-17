@@ -6,7 +6,7 @@
 import time
 from db import accounts_query
 import hashlib
-import upload.utils as upload_utils
+import accounts_api.utils as upload_utils
 #from encryption import utils as encryption_utils
 #from addressing import addresser
 #from encryption import asymmetric

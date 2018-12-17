@@ -2,7 +2,6 @@ syntax = "proto3";
 
 
 message ChildAccount {
-    string user_id = 1;
     string phone_number = 2;
     string first_name = 3;
     string last_name = 4;
@@ -16,7 +15,6 @@ message ChildAccount {
     string indian_time=11;
     bool deactivate=12; //in case the lab has been closed.
     string deactivate_on=13; //in case the lab has been closed.
-    repeated uint32	float_account_idxs=14;
     repeated uint32	create_asset_idxs=15 [packed=true]; //asset whose ownership
                                           //has been transferred to him.
 
@@ -25,13 +23,10 @@ message ChildAccount {
 
     string role=18;
 
-    string parent_role=19;
     uint32 parent_idx=20;
     string parent_zero_pub=21;
-
     string signed_nonce = 22;
     uint32 nonce = 23;
     string nonce_hash= 24;
     string public=25;
-
 }

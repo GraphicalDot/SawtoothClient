@@ -2,7 +2,7 @@
 
 import ledger.utils as ledger_utils
 from remotecalls import remote_calls
-from upload import amazon_s3
+from assets_api import amazon_s3
 import binascii
 import asyncio
 from encryption import utils as encryption_utils
@@ -15,11 +15,11 @@ coloredlogs.install()
 import base64
 import time
 import json
-import upload.utils as upload_utils
+import assets_api.utils as upload_utils
 from db import accounts_query
 from db import assets_query
 from ledger import deserialize_state
-from users import useraccounts
+from accounts_api import userapis
 import ledger.assets.utils as asset_utils
 
 
@@ -40,7 +40,7 @@ async def submit_empty_asset(app, requester, claimed=False):
 
     """
 
-    f = await useraccounts.SolveAccount(requester, app)
+    f = await userapis.SolveAccount(requester, app)
     decrypted_mnemonic = f.decrypted_mnemonic
     org_db_entry = f.org_db
 
@@ -225,7 +225,7 @@ async def submit_create_asset(app, requester, file_data):
     Hence these two keys will be none for this function
     """
     logging.info("Enterintosubmitcreateasset")
-    f = await useraccounts.SolveAccount(requester, app)
+    f = await userapis.SolveAccount(requester, app)
     decrypted_mnemonic = f.decrypted_mnemonic
     org_state = f.org_state
     logging.info(f"THis is the decrypted mnemonic {decrypted_mnemonic}")

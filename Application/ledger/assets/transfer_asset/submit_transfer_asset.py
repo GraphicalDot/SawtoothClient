@@ -2,7 +2,7 @@
 
 import ledger.utils as ledger_utils
 from remotecalls import remote_calls
-from upload import amazon_s3
+from assets_api import amazon_s3
 import binascii
 import asyncio
 from encryption import utils as encryption_utils
@@ -18,9 +18,9 @@ from db import assets_query
 from db import transfer_assets_query
 from  ledger import deserialize_state
 from .send_transfer_asset import send_transfer_asset
-import upload.utils as upload_utils
+import assets_api.utils as upload_utils
 from errors.errors import AssetError
-from users import useraccounts
+from accounts_api import userapis
 import coloredlogs, logging
 coloredlogs.install()
 import ledger.assets.utils as asset_utils
@@ -32,11 +32,11 @@ async def submit_transfer_asset(app, requester, issuer_address, receiver_address
 
     ##decrypting issuer mnemonic
     logging.info("Enter into Transfer asset")
-    f = await useraccounts.SolveAccount(requester, app)
+    f = await userapis.SolveAccount(requester, app)
     decrypted_mnemonic = f.decrypted_mnemonic
 
     logging.info(f"Requester Mnemonic is {decrypted_mnemonic}")
-    instance = await useraccounts.SolveAddress(issuer_address, app.config.REST_API_URL)
+    instance = await userapis.SolveAddress(issuer_address, app.config.REST_API_URL)
 
     ##getting issuer public key and the index at which this asset was created
     if instance.type != "CREATE_ASSET":
@@ -46,7 +46,7 @@ async def submit_transfer_asset(app, requester, issuer_address, receiver_address
     issuer_asset_public_key, issuer_asset_idx = \
                 issuer_asset["public"], issuer_asset["idx"]
 
-    instance = await useraccounts.SolveAddress(receiver_address, app.config.REST_API_URL)
+    instance = await userapis.SolveAddress(receiver_address, app.config.REST_API_URL)
 
     if instance.type != "CREATE_ASSET":
         raise AssetError("Not a valid receiver address")

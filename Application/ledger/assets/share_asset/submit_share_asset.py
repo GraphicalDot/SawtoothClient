@@ -16,11 +16,11 @@ from db import assets_query
 from db import share_assets_query
 from  ledger import deserialize_state
 from .send_share_asset import send_share_asset
-import upload.utils as upload_utils
+import assets_api.utils as upload_utils
 from errors.errors import AssetError, ApiInternalError, CustomError
 import hashlib
 import coloredlogs, logging
-from users import useraccounts
+from accounts_api import userapis
 coloredlogs.install()
 
 
@@ -39,7 +39,7 @@ async def submit_share_asset(app, requester, asset_address,
 
     """
 
-    f = await useraccounts.SolveAccount(requester, app)
+    f = await userapis.SolveAccount(requester, app)
     decrypted_mnemonic = f.decrypted_mnemonic
     org_state = f.org_state
     logging.info(f"THis is the decrypted mnemonic {decrypted_mnemonic}")
@@ -53,7 +53,7 @@ async def submit_share_asset(app, requester, asset_address,
                                 receive_asset_address):
             raise ApiInternalError("This shared asset has already been done")
     ##checking point 5
-    receive_asset_instance = await useraccounts.SolveAddress(
+    receive_asset_instance = await userapis.SolveAddress(
                             receive_asset_address,
                             app.config.REST_API_URL)
 
@@ -70,7 +70,7 @@ async def submit_share_asset(app, requester, asset_address,
             raise AssetError("Unique code provided is either wrong or meant for different receiver_address")
 
 
-    asset_instance = await useraccounts.SolveAddress(asset_address, app.config.REST_API_URL)
+    asset_instance = await userapis.SolveAddress(asset_address, app.config.REST_API_URL)
     if asset_instance.type != "CREATE_ASSET":
         raise AssetError("asset_address is not asset address")
 

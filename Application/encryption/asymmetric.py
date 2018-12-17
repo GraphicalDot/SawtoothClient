@@ -5,10 +5,8 @@
 from Crypto.Random import get_random_bytes
 import base64
 import binascii
-from SSSA import sssa
 import random
 from ecies import encrypt, decrypt
-from Logging.clogging import logger
 import hashlib
 import coincurve
 import coloredlogs, logging

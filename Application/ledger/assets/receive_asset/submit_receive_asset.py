@@ -19,18 +19,18 @@ from encryption import signatures
 from pprint import pprint
 
 #import json
-import upload.utils as upload_utils
+import assets_api.utils as upload_utils
 from db import accounts_query
 from db import assets_query, receive_assets_query
 #from ledger import deserialize_state
-from users import useraccounts
+from accounts_api import userapis
 import random
 
 async def submit_receive_asset(app, requester,_id_, name, description,
                                                         at_which_asset_expires):
     """
     """
-    f = await useraccounts.SolveAccount(requester, app)
+    f = await userapis.SolveAccount(requester, app)
     decrypted_mnemonic = f.decrypted_mnemonic
     logging.info(f"THis is the decrypted mnemonic {decrypted_mnemonic}")
     org_db_entry = f.org_db
@@ -56,7 +56,7 @@ async def submit_receive_asset(app, requester,_id_, name, description,
                             account_id=account_zero_pub,
                             index=0)
 
-    instance = await useraccounts.SolveAddress(org_account_address,
+    instance = await userapis.SolveAddress(org_account_address,
                                 app.config.REST_API_URL)
     org_state = instance.data
 

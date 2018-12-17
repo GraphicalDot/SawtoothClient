@@ -3,7 +3,7 @@ import time
 import hashlib
 import random
 from db import accounts_query
-import upload.utils as upload_utils
+import assets_api.utils as upload_utils
 from encryption import utils as encryption_utils
 from addressing import addresser
 from encryption import asymmetric

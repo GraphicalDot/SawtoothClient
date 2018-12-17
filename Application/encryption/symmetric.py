@@ -5,7 +5,6 @@ from Crypto.Cipher import AES
 from Crypto.Random import get_random_bytes
 import base64
 import binascii
-from SSSA import sssa
 import random
 
 def generate_child_key_index():
