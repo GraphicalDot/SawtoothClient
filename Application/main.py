@@ -15,7 +15,7 @@
 
 import argparse
 import asyncio
-import logging
+import hashlib
 import os
 from signal import signal, SIGINT
 import sys
@@ -31,13 +31,13 @@ from sawtooth_signing import CryptoFactory
 from zmq.asyncio import ZMQEventLoop
 from remotecalls.remote_calls import  from_mnemonic
 #from users.login import USERS_BP
-import routes.utils as route_utils
 from errors.errors import ERRORS_BP
 #from users.userapi import USER_ACCOUNTS_BP
 from ledger.accounts.organization_account.submit_organization_account import submit_admin_account
 
 from routes.r_accounts import ACCOUNTS_BP
 from routes.r_assets import ASSETS_BP
+from routes.route_utils import set_password, new_account
 
 
 
@@ -104,11 +104,16 @@ def load_config(app):  # pylint: disable=too-many-branches
         app.config.ADMIN_MNEMONIC = opts.admin_mnemonic
 
     if opts.admin_password is not None:
-        if hashlib.sha512(opts.admin_password.ecnode()).hexdigest() !=\
+        if hashlib.sha512(opts.admin_password.encode()).hexdigest() !=\
             app.config.ADMIN_PASSWORD:
-            logging.error("Invalid password")
+            logging.error("Invalid admin password")
             sys.exit(1)
+        else:
+            logging.info("Admin password Macthed")
 
+    else:
+        logging.error("admin_password was not provided")
+        sys.exit(1)
 
 
     if app.config.SECRET_KEY is None:
@@ -217,13 +222,13 @@ def main():
 
     ##if ADMIN data is not present in the users_table then insert
     if not admin:
-        admin = loop.run_until_complete(user_utils.new_account(app, \
+        admin = loop.run_until_complete(new_account(app, \
                         app.config.ADMIN_PANCARD,
                         app.config.ADMIN_PHONE_NUMBER, app.config.ADMIN_EMAIL, \
                         "ADMIN", app.config.ADMIN_GST_NUMBER,
                         app.config.ADMIN_TAN_NUMBER, app.config.ADMIN_ORG_NAME))
 
-        mnemonic ,admin = loop.run_until_complete(user_utils.set_password(
+        mnemonic ,admin = loop.run_until_complete(set_password(
                     app, admin, app.config.ADMIN_PASSWORD, pancard=None))
 
 

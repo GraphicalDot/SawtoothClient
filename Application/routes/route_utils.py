@@ -12,9 +12,9 @@ import uuid
 import binascii
 from remotecalls.remote_calls import generate_mnemonic
 from ledger import deserialize_state
-import ledger.utils as ledger_utils
 from addressing import addresser
 from db import accounts_query
+from . import  application_utils
 
 
 import coloredlogs, logging
@@ -46,7 +46,7 @@ async def generate_asset_indexes(app, address):
         type ="ACCOUNT"
 
     logging.info(f"This is the account {account} and type is {type}")
-    key_index = ledger_utils.generate_key_index(account.create_asset_idxs)
+    key_index = generate_key_index(account.create_asset_idxs)
     return key_index
 
 

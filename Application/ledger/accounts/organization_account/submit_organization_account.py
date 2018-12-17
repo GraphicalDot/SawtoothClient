@@ -6,7 +6,7 @@
 import time
 from db import accounts_query
 import hashlib
-import ledger.utils as upload_utils
+import  encryption.utils as  encryption_utils
 #from encryption import utils as encryption_utils
 #from addressing import addresser
 #from encryption import asymmetric
@@ -26,7 +26,7 @@ coloredlogs.install()
 
 
 async def submit_admin_account(app, user):
-    acc_signer= upload_utils.create_signer(app.config.ADMIN_ZERO_PRIV)
+    acc_signer= encryption_utils.create_signer(app.config.ADMIN_ZERO_PRIV)
 
     transaction_data= {"config": app.config,
                         "txn_key": acc_signer,
@@ -90,7 +90,7 @@ async def submit_organization_account(app, user):
 
     if user["acc_zero_pub"] != zero_pub:
         raise Exception("wrong mnemonic for user, Key mismatch error")
-    acc_signer=upload_utils.create_signer(zero_priv)
+    acc_signer=encryption_utils.create_signer(zero_priv)
     ##hashing gst number and tan number if present
 
     ##fecth float account details from the blokchchain, because it might be a possibility

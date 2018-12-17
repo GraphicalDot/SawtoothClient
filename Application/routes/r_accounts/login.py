@@ -2,7 +2,6 @@
 from sanic import Blueprint
 from db.accounts_query import fetch_info_by_email, update_password
 import re
-from ..utils import validate_fields, set_change_password
 from .authorization import generate_auth_token
 from sanic.log import logger
 from sanic import response
@@ -10,7 +9,8 @@ from encryption.key_derivations import check_bcrypt
 #USERS_BP = Blueprint('users')
 from errors.errors import ApiUnauthorized, PasswordStrengthError
 from .authorization import authorized
-from ..utils import user_mnemonic_frm_password
+from routes.route_utils import user_mnemonic_frm_password, validate_fields,\
+        set_change_password
 
 import coloredlogs, logging
 coloredlogs.install()

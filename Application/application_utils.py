@@ -12,6 +12,19 @@ from sawtooth_signing.secp256k1 import Secp256k1PrivateKey
 from sawtooth_signing import CryptoFactory
 from sawtooth_signing import create_context
 
+async def generate_key_index(array):
+    ##this will output the key from 1 to 2**32-1 which is not present in
+    ## array, though the probability of thats happening is very very low as
+    ## 2**32 is huge number, we still want to make sure that duplicate keys
+    ## shouldnt exists in array
+    key_index = random.randint(1, 2**32-1)
+    if not array:
+        return key_index
+    while key_index in array:
+        ##if the array is huge, it will get stuck
+        await asyncio.sleep(.01)
+        key_index = random.randint(1, 2**32-1)
+    return key_index
 
 
 def create_signer(private_key_hex):
