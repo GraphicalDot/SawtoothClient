@@ -152,7 +152,10 @@ async def set_change_password(app, account, new_password):
 
     return h_password, salt, encrypted_mnemonic
 
-async def set_password(app, account, password, pancard=None):
+async def set_password(app, account=None, password=None):
+    if not account:
+            raise errors.CustomError("Account shouldnt be empty")
+
     if account["role"] != "ADMIN":
 
         mnemonic= encryption_utils.decrypt_mnemonic_privkey(
@@ -171,16 +174,14 @@ async def set_password(app, account, password, pancard=None):
 
     h_password = key_derivations.generate_bcrypt(password.encode()).decode()
 
-    if pancard:
-        account.update({"pancard": pancard})
     account.update({"password": h_password,
                     "salt": salt,
                     "encrypted_mnemonic": encrypted_mnemonic
     })
     return mnemonic, account
 
-async def new_account(app, pancard, phone_number, email, role, \
-                    gst_number, tan_number, org_name):
+async def new_account(app, pancard=None, phone_number=None, email=None, role=None, \
+                    gst_number=None, tan_number=None, org_name=None):
     """
     This method will be used to generate new mnemonic data when
     any parent wants to upload some data on the basis of
@@ -194,7 +195,6 @@ async def new_account(app, pancard, phone_number, email, role, \
     if role != "ADMIN":
         master_pub, master_priv, zero_pub, zero_priv, mnemonic = await\
             generate_mnemonic(app.config.GOAPI_URL)
-        admin_zero_pub = app.config.ADMIN_ZERO_PUB
         encrypted_admin_mnemonic = encryption_utils.encrypt_mnemonic_pubkey(
                                                 mnemonic, admin_zero_pub)
         _mnemonic= encryption_utils.decrypt_mnemonic_privkey(encrypted_admin_mnemonic,
@@ -209,24 +209,21 @@ async def new_account(app, pancard, phone_number, email, role, \
             encrypted_admin_mnemonic= None
 
     return {"user_id": user_id,
-            "claimed": False,
-            "claimed_on": None,
-        "role": role,
-        "share_asset_idxs": [],
-        "create_asset_idxs": [],
-        "receive_asset_idxs": [],
-        "child_account_idxs": [],
-        "closed": False,
-        "pancard": pancard,
-        "admin_zero_pub": admin_zero_pub,
-        "phone_number": phone_number,
-        "email": email,
-        "gst_number": gst_number,
-        "tan_number": tan_number,
-        "org_name": org_name,
-         "encrypted_admin_mnemonic": encrypted_admin_mnemonic,
-         "acc_mstr_pub": master_pub,
-         "acc_zero_pub": zero_pub}
+            "role": role,
+            "share_asset_idxs": [],
+            "create_asset_idxs": [],
+            "child_account_idxs": [],
+            "shared_secret":[],
+            "closed": False,
+            "pancard": pancard,
+            "phone_number": phone_number,
+            "email": email,
+            "gst_number": gst_number,
+            "tan_number": tan_number,
+            "org_name": org_name,
+            "encrypted_admin_mnemonic": encrypted_admin_mnemonic,
+            "acc_mstr_pub": master_pub,
+            "acc_zero_pub": zero_pub}
 
 
 

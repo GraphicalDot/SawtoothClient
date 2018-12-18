@@ -25,7 +25,7 @@ FAMILY_NAME = 'remedium_healthcare'
 NS = hashlib.sha512(FAMILY_NAME.encode()).hexdigest()[:6]
 
 
-class CreateAssetSpace(enum.IntEnum):
+class AssetSpace(enum.IntEnum):
     START = 1
     STOP =  64
 
@@ -45,22 +45,72 @@ class TransferAssetSpace(enum.IntEnum):
     STOP =  256
 
 
-class FloatAccountSpace(enum.IntEnum):
+class SharedSecretSpace(enum.IntEnum):
     START = 256
     STOP = 320
 
-class CreateUserAccountSpace(enum.IntEnum):
+class UserAccountSpace(enum.IntEnum):
     START = 321
     STOP = 384
 
 
-class CreateOrganizationAccountSpace(enum.IntEnum):
+class OrganizationAccountSpace(enum.IntEnum):
     START = 385
     STOP = 448
 
-class CreateChildAccountSpace(enum.IntEnum):
+class ChildAccountSpace(enum.IntEnum):
     START = 449
     STOP = 512
+
+
+def address_is(address):
+
+    if address[:len(NS)] != NS:
+        print ("THis is other family")
+        return AddressSpace.OTHER_FAMILY, None
+
+    infix = int(address[14:17], 16)
+    int_hex = address[6:14]
+
+
+    if _contains(infix, AssetSpace):
+        result = AddressSpace.CREATE_ASSET
+
+    elif _contains(infix, ShareAssetSpace):
+        result = AddressSpace.SHARE_ASSET
+
+    elif _contains(infix, ReceiveAssetSpace):
+        result = AddressSpace.RECEIVE_ASSET
+
+    elif _contains(infix, SharedSecretSpace):
+        result = AddressSpace.SHARED_SECRET
+
+    elif _contains(infix, UserAccountSpace):
+        result = AddressSpace.USER_ACCOUNT
+
+
+    elif _contains(infix, OrganizationAccountSpace):
+        result = AddressSpace.ORGANIZATION_ACCOUNT
+
+    elif _contains(infix, ChildAccountSpace):
+        result = AddressSpace.CHILD_ACCOUNT
+
+
+    elif _contains(infix, TransferAssetSpace):
+        result = AddressSpace.TRANSFER_ASSET
+
+
+    else:
+        result = AddressSpace.OTHER_FAMILY
+
+
+    return (result.name, hex_to_int(int_hex))
+
+def is_account_address(address):
+    result = address_is(address)
+    if result[0] != "CREATE_ACCOUNT":
+        return False
+    return True
 
 
 
@@ -72,7 +122,7 @@ class AddressSpace(enum.IntEnum):
     SHARE_ASSET = 1
     RECEIVE_ASSET = 2
     TRANSFER_ASSET = 3
-    FLOAT_ACCOUNT = 4
+    SHARED_SECRET = 4
     USER_ACCOUNT = 5
     ORGANIZATION_ACCOUNT=6
     CHILD_ACCOUNT=7
@@ -81,62 +131,62 @@ class AddressSpace(enum.IntEnum):
 
 
 
-def float_account_address(account_id, index):
+def shared_secret_address(public, index):
 
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(account_id)
+    full_hash = _hash(public)
 
 
     return NS \
             + index_hex\
-            +_compress(full_hash, FloatAccountSpace.START, FloatAccountSpace.STOP)\
+            +_compress(full_hash, SharedSecretSpace.START, SharedSecretSpace.STOP)\
             + full_hash[:53]
 
 
-def create_user_account_address(account_id, index):
+def user_address(public, index):
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(account_id)
+    full_hash = _hash(public)
     return NS \
             + index_hex\
-            +_compress(full_hash, CreateUserAccountSpace.START, \
-                    CreateUserAccountSpace.STOP)\
+            +_compress(full_hash, UserAccountSpace.START, \
+                    UserAccountSpace.STOP)\
             + full_hash[:53]
 
 
 
-def create_organization_account_address(account_id, index):
+def organization_address(public, index):
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(account_id)
+    full_hash = _hash(public)
     return NS \
             + index_hex\
-            +_compress(full_hash, CreateOrganizationAccountSpace.START, \
-                        CreateOrganizationAccountSpace.STOP)\
+            +_compress(full_hash, OrganizationAccountSpace.START, \
+                        OrganizationAccountSpace.STOP)\
             + full_hash[:53]
 
 
-def child_account_address(account_id, index):
+def child_address(public, index):
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(account_id)
+    full_hash = _hash(public)
     return NS \
             + index_hex\
-            +_compress(full_hash, CreateChildAccountSpace.START, \
-                        CreateChildAccountSpace.STOP)\
+            +_compress(full_hash, ChildAccountSpace.START, \
+                        ChildAccountSpace.STOP)\
             + full_hash[:53]
 
-def create_asset_address(asset_id, index):
+def asset_address(public, index):
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(asset_id)
+    full_hash = _hash(public)
     return NS \
             + index_hex\
-            +_compress(full_hash, CreateAssetSpace.START, CreateAssetSpace.STOP)\
+            +_compress(full_hash, AssetSpace.START, AssetSpace.STOP)\
             + full_hash[:53]
 
 
 
 
-def share_asset_address(asset_id,  index):
+def share_asset_address(public,  index):
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(asset_id)
+    full_hash = _hash(public)
     return NS \
             + index_hex\
             +_compress(full_hash, ShareAssetSpace.START, ShareAssetSpace.STOP)\
@@ -144,18 +194,18 @@ def share_asset_address(asset_id,  index):
 
 
 
-def transfer_asset_address(asset_id,  index):
+def transfer_asset_address(public,  index):
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(asset_id)
+    full_hash = _hash(public)
     return NS \
             + index_hex\
             +_compress(full_hash, TransferAssetSpace.START, TransferAssetSpace.STOP)\
             + full_hash[:53]
 
 
-def receive_asset_address(asset_id, index):
+def receive_asset_address(public, index):
     index_hex = '{:08x}'.format(index)
-    full_hash = _hash(asset_id)
+    full_hash = _hash(public)
     return NS \
             + index_hex\
             +_compress(full_hash, ReceiveAssetSpace.START, ReceiveAssetSpace.STOP)\
@@ -183,73 +233,23 @@ def hex_to_int(int_hex):
     return int.from_bytes(binascii.unhexlify(int_hex), byteorder='big')
 
 
-def address_is(address):
-
-    if address[:len(NS)] != NS:
-        print ("THis is other family")
-        return AddressSpace.OTHER_FAMILY, None
-
-    infix = int(address[14:17], 16)
-    int_hex = address[6:14]
-
-
-    if _contains(infix, CreateAssetSpace):
-        result = AddressSpace.CREATE_ASSET
-
-    elif _contains(infix, ShareAssetSpace):
-        result = AddressSpace.SHARE_ASSET
-
-    elif _contains(infix, ReceiveAssetSpace):
-        result = AddressSpace.RECEIVE_ASSET
-
-    elif _contains(infix, FloatAccountSpace):
-        result = AddressSpace.FLOAT_ACCOUNT
-
-    elif _contains(infix, CreateUserAccountSpace):
-        result = AddressSpace.USER_ACCOUNT
-
-
-    elif _contains(infix, CreateOrganizationAccountSpace):
-        result = AddressSpace.ORGANIZATION_ACCOUNT
-
-    elif _contains(infix, CreateChildAccountSpace):
-        result = AddressSpace.CHILD_ACCOUNT
-
-
-    elif _contains(infix, TransferAssetSpace):
-        result = AddressSpace.TRANSFER_ASSET
-
-
-    else:
-        result = AddressSpace.OTHER_FAMILY
-
-
-    return (result.name, hex_to_int(int_hex))
-
-def is_account_address(address):
-    result = address_is(address)
-    if result[0] != "CREATE_ACCOUNT":
-        return False
-    return True
-
-
 
 def test_address(key):
     g = random.randint(0, 2**32-1)
-    _float_account_address = float_account_address(key, g)
-    _asset_address = create_asset_address(key, g)
+    _float_account_address = shared_secret_address(key, g)
+    _asset_address = asset_address(key, g)
     _share_asset_address = share_asset_address(key, g)
     _receive_asset_address = receive_asset_address(key, g)
     _transfer_asset_address = transfer_asset_address(key, g)
 
-    user_account_address = create_user_account_address(key, g)
-    organization_address = create_organization_account_address(key, g)
-    child_address = child_account_address(key, g)
+    user_account_address = user_address(key, g)
+    organization_acc_address = organization_address(key, g)
+    child_acc_address = child_address(key, g)
 
-    print ("FLOAT", _float_account_address, address_is(_float_account_address))
+    print ("SHARED_SECRET", _float_account_address, address_is(_float_account_address))
     print ("USER_ACCOUNT", user_account_address, address_is(user_account_address))
-    print ("Organization Address", organization_address, address_is(organization_address))
-    print ("Child account Address", child_address, address_is(child_address))
+    print ("Organization Address", organization_address, address_is(organization_acc_address))
+    print ("Child account Address", child_address, address_is(child_acc_address))
 
     print ("Create Asset Address", _asset_address, address_is(_asset_address))
     print ("Share asset address", _share_asset_address, address_is(_share_asset_address))

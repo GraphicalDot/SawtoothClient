@@ -14,41 +14,36 @@ import upload.utils as upload_utils
 #import ledger.utils as ledger_utils
 from remotecalls import remote_calls
 from ledger import deserialize_state
-
+from errors import errors
 from .send_create_organization_account import send_organization_account
 from addressing import addresser
-
+from routes import route_utils
 import coloredlogs, logging
 coloredlogs.install()
 
 
 
-async def submit_child_account(app, user):
+async def submit_user_account(app, pancard=None, phone_number=None, email=None, role=None, \
+                    gst_number=None, tan_number=None, password=None):
     """
+    org_name is by default None for the user
     """
+    if role != "USER":
+            raise errors.CustomError("Roel required is USER")
 
+    user = await route_utils.new_account(app, pancard=pancard, phone_number=phone_number, email=email, role=role, \
+                        gst_number=gst_number, tan_number=tan_number, org_name=None)
     ##no9w the create account address and signer will be the user himself
 
-    master_pub, master_priv, zero_pub, zero_priv = await \
-                remote_calls.from_mnemonic(app.config.GOAPI_URL, user["mnemonic"])
+    user_mnemonic, user_account = await set_password(app, account=user, password=password)
 
-    if user["acc_zero_pub"] != zero_pub:
-        raise Exception("wrong mnemonic for user, Key mismatch error")
+
+    master_pub, master_priv, zero_pub, zero_priv = await \
+                remote_calls.from_mnemonic(app.config.GOAPI_URL, user_mnemonic)
+
+
     acc_signer=upload_utils.create_signer(zero_priv)
     ##hashing gst number and tan number if present
-
-    ##fecth float account details from the blokchchain, because it might be a possibility
-    ##that there are several create_asset transaction in pipeline, and the user
-    ## now start the procedute to claim the acccount, Now if we fetch pending user
-    ## rom db rather then blokchcain then flt_acc_idxs will differ
-
-    flt_acc_address = addresser.float_account_address(
-                user["parent_pub"], user["parent_idx"])
-
-    flt_account = await deserialize_state.deserialize_float_account(
-                app.config.REST_API_URL, flt_acc_address)
-
-
 
     ##import from ledger.account import float_account, other then create_asset_idxs
     ## wil be emprty for the float_account, if we push empty list on blockchain

@@ -45,32 +45,10 @@ async def cursor_to_result(cursor):
         return result[0]
 
 
-async def find_pending_account(app, pancard, email):
-    try:
-        query = {"pancard": pancard, "email": email}
-        cursor = await r.table(app.config.DATABASE["pending_users"])\
-            .filter(query)\
-            .run(app.config.DB)
-    except Exception as e:
-        logging.info(f"No account failed with error --<{e}>--")
-        raise DBError(f"Database Error{e}")
-
-    return await cursor_to_result(cursor)
-
-async def find_pending_account_email_phone(app, phone_number, email):
-    try:
-        query = {"phone_number": phone_number, "email": email}
-        cursor = await r.table(app.config.DATABASE["pending_users"])\
-            .filter(query)\
-            .run(app.config.DB)
-    except Exception as e:
-        logging.info(f"No account failed with error --<{e}>--")
-        raise DBError(f"Database Error{e}")
-
-    return await cursor_to_result(cursor)
 
 
-async def find_account(app, org_name, pancard, email):
+
+async def find_orgnization_account(app, org_name, pancard, email):
     try:
         query = {"pancard": pancard, "org_name": org_name, "email": email}
         cursor = await r.table(app.config.DATABASE["users"])\

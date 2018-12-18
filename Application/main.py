@@ -224,13 +224,17 @@ def main():
     ##if ADMIN data is not present in the users_table then insert
     if not admin:
         admin = loop.run_until_complete(new_account(app, \
-                        app.config.ADMIN_PANCARD,
-                        app.config.ADMIN_PHONE_NUMBER, app.config.ADMIN_EMAIL, \
-                        "ADMIN", app.config.ADMIN_GST_NUMBER,
-                        app.config.ADMIN_TAN_NUMBER, app.config.ADMIN_ORG_NAME))
+                        pancard=app.config.ADMIN_PANCARD,
+                        phone_number=app.config.ADMIN_PHONE_NUMBER,
+                        email=app.config.ADMIN_EMAIL, \
+                        role="ADMIN",
+                        gst_number=app.config.ADMIN_GST_NUMBER,
+                        tan_number=app.config.ADMIN_TAN_NUMBER,
+                        org_name=app.config.ADMIN_ORG_NAME))
 
         mnemonic ,admin = loop.run_until_complete(set_password(
-                    app, admin, app.config.ADMIN_PASSWORD, pancard=None))
+                    app, account=admin,
+                        password=app.config.ADMIN_PASSWORD))
 
 
         ##since ADMIN not going to have a create_account transaction on
