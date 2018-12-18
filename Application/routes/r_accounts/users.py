@@ -3,10 +3,10 @@
 
 from sanic.request import RequestParameters
 from .authorization import authorized
-from routes.utils import validate_fields
-from routes.utils import new_account
-from routes.utils import set_password
-from routes.utils import user_mnemonic_frm_password, sendEmail, sendMessage
+from routes.route_utils import validate_fields
+from routes.route_utils import new_account
+from routes.route_utils import set_password
+from routes.route_utils import user_mnemonic_frm_password, sendEmail, sendMessage
 import hashlib
 from db import accounts_query
 
@@ -27,7 +27,6 @@ from encryption import signatures
 import aiohttp
 import asyncio
 
-import ledger.utils as ledger_utils
 from ledger import deserialize_state
 
 import coloredlogs, logging
@@ -41,7 +40,7 @@ from ._format_api_result import format_get_organization_account,\
 
 
 from sanic import Blueprint
-USERS_BP = Blueprint('users', url_prefix='/')
+USERS_BP = Blueprint('users', url_prefix='/users')
 
 def asyncinit(cls):
     __new__ = cls.__new__
@@ -65,7 +64,7 @@ def asyncinit(cls):
 
 
 
-@USERS_BP.get('accounts/address')
+@USERS_BP.get('/address')
 async def get_address(request):
     """
     """
@@ -82,6 +81,62 @@ async def get_address(request):
             'message': f"{instance.type} type found",
             "data": instance.data,
             })
+
+
+
+
+
+
+
+@USERS_BP.get('/registration')
+async def register_user(request):
+    """
+    """
+    address = request.args.get("address")
+
+    if not address:
+        raise errors.CustomError("address is required")
+
+    instance = await SolveAddress(address, request.app.config.REST_API_URL)
+    return response.json(
+            {
+            'error': False,
+            'success': True,
+            'message': f"{instance.type} type found",
+            "data": instance.data,
+            })
+
+
+
+
+@USERS_BP.get('/registration_no_mnemonic')
+async def register_user_no_mnemonic(request):
+    """
+    When a user taked the responsibility to own their mnemonic,
+    if they forget their Mnemonic we cant do anything about it
+    """
+    address = request.args.get("address")
+
+    if not address:
+        raise errors.CustomError("address is required")
+
+    instance = await SolveAddress(address, request.app.config.REST_API_URL)
+    return response.json(
+            {
+            'error': False,
+            'success': True,
+            'message': f"{instance.type} type found",
+            "data": instance.data,
+            })
+
+
+
+
+
+
+
+
+
 
 
 

@@ -105,11 +105,12 @@ def load_config(app):  # pylint: disable=too-many-branches
 
     if opts.admin_password is not None:
         if hashlib.sha512(opts.admin_password.encode()).hexdigest() !=\
-            app.config.ADMIN_PASSWORD:
+            app.config.ADMIN_HASH_PASSWORD:
             logging.error("Invalid admin password")
             sys.exit(1)
         else:
             logging.info("Admin password Macthed")
+            app.config.ADMIN_PASSWORD = opts.admin_password
 
     else:
         logging.error("admin_password was not provided")
