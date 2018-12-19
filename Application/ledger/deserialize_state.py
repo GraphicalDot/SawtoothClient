@@ -3,7 +3,7 @@
 
 from protocompiled import float_account_pb2, account_pb2, asset_pb2, \
                 organization_account_pb2, child_account_pb2, receive_asset_pb2, \
-                share_asset_pb2
+                share_asset_pb2, user_pb2
 from google.protobuf.json_format import MessageToDict
 import requests
 import json
@@ -68,7 +68,6 @@ async def deserialize_float_account(REST_API_URL, address):
 
 ##TODO this must be deleted
 async def deserialize_child(REST_API_URL, address):
-        logging.info(f"Now deserializing organization account present on {address}")
 
         state_data = await address_state(REST_API_URL, address)
         ##decoding data stored on the blockchain
@@ -80,7 +79,16 @@ async def deserialize_child(REST_API_URL, address):
         account.update({"address": address})
         return account
 
-
+async def deserialize_user(REST_API_URL, address):
+        state_data = await address_state(REST_API_URL, address)
+        ##decoding data stored on the blockchain
+        if not state_data:
+            return False
+        acc = user_pb2.UserAccount()
+        acc.ParseFromString(state_data)
+        account = MessageToDict(acc, preserving_proto_field_name=True)
+        account.update({"address": address})
+        return account
 
 
 async def deserialize_org_account(REST_API_URL, address):

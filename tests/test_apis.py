@@ -3,10 +3,7 @@
 
 import requests
 import rethinkdb as ret
-from test_static import CREATE_ORGANIZATION_ACCOUNT, GET_CHILDREN, \
-            GET_ORGANIZATION_ACCOUNT, GET_FLOAT_ACCOUNTS, UPLOAD, \
-            GET_ADDRESS, GET_ASSETS, CREATE_RECEIVE_ASSET, GET_RECEIVE_ASSETS,\
-            CREATE_SHARE_ASSET, GET_SHARE_ASSETS, CREATE_ASSET, DECRYPT_KEYS
+from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN
 
 from test_miscelleneous import get_headers, receive_asset_data, revoke_time_stamp
 import json
@@ -16,7 +13,7 @@ from faker import Faker
 faker = Faker()
 coloredlogs.install()
 
-
+"""
 class AssetApis(object):
 
 
@@ -121,7 +118,7 @@ class AssetApis(object):
         return requests.get(GET_SHARE_ASSETS,
         headers=headers)
 
-
+"""
 class AccountApis(object):
 
     @staticmethod
@@ -140,18 +137,8 @@ class AccountApis(object):
         else:
             return False
 
-    @staticmethod
-    def claim_account(requester):
 
-        data = {"pancard": requester["pancard"],\
-                    "phone_number": requester["phone_number"],
-                    "email": requester["email"], \
-                    "org_name": requester["org_name"],
-                    "password": requester["password"], \
-                    "tan_number": requester["tan_number"],
-                    "gst_number": requester["gst_number"]}
-        return requests.post("http://localhost:8000/accounts/claim_account",
-                data=json.dumps(data))
+
 
     @staticmethod
     def register_child(requester, child):
@@ -160,6 +147,26 @@ class AccountApis(object):
 
         return requests.post("http://localhost:8000/accounts/create_child",
                                 data=json.dumps(child), headers=headers)
+
+
+
+    @staticmethod
+    async def register_user(user):
+
+        return requests.post(USER_REGISTRATION,
+                                data=json.dumps(user))
+
+    @staticmethod
+    async def share_mnemonic(requester, email_list):
+        headers = get_headers(requester["email"],
+                        requester["password"])
+
+        data = {"email_list": email_list,
+                "total_shares": 4,
+                "minimum_required": 3}
+        logging.info(headers)
+        return requests.post(SHARE_MNEMONIC,
+                                data=json.dumps(data), headers=headers)
 
     @staticmethod
     def get_children(requester):

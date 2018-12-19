@@ -43,8 +43,15 @@ def authorized():
                 email = deserialize_auth_token(
                     request.app.config.SECRET_KEY,
                     request.headers["token"]).get('email')
+
+                public_key = deserialize_auth_token(
+                    request.app.config.SECRET_KEY,
+                    request.headers["token"]).get('public_key')
                 auth_info = await fetch_info_by_email(
                         email, request.app)
+                if auth_info["acc_zero_pub"] != public_key:
+                    logging.error("Auth token has wrong password")
+
                 if auth_info is None:
                     logging.error("No user exists")
                     raise ApiUnauthorized(

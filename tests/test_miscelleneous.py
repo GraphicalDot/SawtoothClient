@@ -9,13 +9,11 @@ import datetime
 import random
 from io import StringIO
 faker = Faker()
-from test_static import API_URL
-from test_static import LOGIN
 import requests
 import json
 import uuid
-from test_static import SCOPE, NATURE, OPERATIONS
 import coloredlogs, logging
+from test_static import LOGIN
 coloredlogs.install()
 
 

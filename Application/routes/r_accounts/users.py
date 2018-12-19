@@ -134,35 +134,49 @@ async def get_mnemonic(request):
     pass
 
 
-@USERS_BP.get('/share_mnemonic')
+@USERS_BP.post('/share_mnemonic')
 @authorized()
-async def share_mnemonic(request):
+async def share_mnemonic(request, requester):
     """
     When a user taked the responsibility to own their mnemonic,
     if they forget their Mnemonic we cant do anything about it
     """
 
-    required_fields = ["email_list", "total_shares", "recovery_shares"]
+    required_fields = ["email_list", "total_shares", "minimum_required"]
 
     validate_fields(required_fields, request.json)
 
-    if len(request.json["email_list"]) < total_shares or int(total_shares) <3:
+    if len(request.json["email_list"]) < request.json["total_shares"] or \
+            int(request.json["total_shares"]) <3:
+        logging.error("To share passwords minimum 3 users are required")
         raise errors.CustomError("To share passwords minimum 3 users are required")
 
 
+    async with aiohttp.ClientSession() as session:
+        friends= await asyncio.gather(*[
+            accounts_query.find_on_key(request.app, "email", email)
+                 for email in request.json["email_list"]
+        ])
 
-    address = request.args.get("address")
 
-    if not address:
-        raise errors.CustomError("address is required")
+    logging.info(requester)
 
-    instance = await SolveAddress(address, request.app.config.REST_API_URL)
+
+    addresses= [addresser.user_address(friend["acc_zero_pub"], 0) for friend in friends]
+
+    async with aiohttp.ClientSession() as session:
+        user_accounts= await asyncio.gather(*[
+            deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
+                 for address in addresses
+        ])
+
+
+    logging.info(user_accounts)
     return response.json(
             {
             'error': False,
             'success': True,
-            'message': f"{instance.type} type found",
-            "data": instance.data,
+            "data": friends
             })
 
 
