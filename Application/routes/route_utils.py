@@ -180,6 +180,7 @@ async def set_password(app, account=None, password=None):
     })
     return mnemonic, account
 
+
 async def new_account(app, pancard=None, phone_number=None, email=None, role=None, \
                     gst_number=None, tan_number=None, org_name=None):
     """

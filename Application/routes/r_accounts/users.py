@@ -17,6 +17,7 @@ import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
 from ledger.accounts.user_account.submit_user_account import submit_user_account
+from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import submit_share_mnemonic
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
 from addressing import addresser
@@ -27,8 +28,9 @@ from encryption import symmetric
 from encryption import signatures
 import aiohttp
 import asyncio
-
+from ledger.split_secret import split_secret, combine_secret
 from ledger import deserialize_state
+from routes.resolve_account import ResolveAccount
 
 import coloredlogs, logging
 coloredlogs.install()
@@ -142,16 +144,20 @@ async def share_mnemonic(request, requester):
     if they forget their Mnemonic we cant do anything about it
     """
 
-    required_fields = ["email_list", "total_shares", "minimum_required"]
+    required_fields = ["email_list", "minimum_required"]
 
     validate_fields(required_fields, request.json)
 
-    if len(request.json["email_list"]) < request.json["total_shares"] or \
-            int(request.json["total_shares"]) <3:
-        logging.error("To share passwords minimum 3 users are required")
+    if request.json["minimum_required"] < 3:
         raise errors.CustomError("To share passwords minimum 3 users are required")
 
 
+    if requester["role"] == "USER":
+        requester_address = addresser.user_address(requester["acc_zero_pub"], 0)
+    else:
+        ##handle case for organization
+        pass
+    ##fecth all accounts present in the email_list from the users table in database
     async with aiohttp.ClientSession() as session:
         friends= await asyncio.gather(*[
             accounts_query.find_on_key(request.app, "email", email)
@@ -159,19 +165,51 @@ async def share_mnemonic(request, requester):
         ])
 
 
-    logging.info(requester)
 
-
+    ##make all account addresses for all accounts present in the database
     addresses= [addresser.user_address(friend["acc_zero_pub"], 0) for friend in friends]
 
+    ## Fetch all accounts corresponding to the addresses from the blockchain
     async with aiohttp.ClientSession() as session:
         user_accounts= await asyncio.gather(*[
             deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
                  for address in addresses
         ])
 
+    ##resolving account for the requester to get his decrypted menmonic
+    user = await ResolveAccount(requester, request.app)
+    logging.info(user.decrypted_mnemonic)
 
-    logging.info(user_accounts)
+    ##On the basis of the length of user_accounts, generate random indexes
+    ## from the mnemonic and get the PUBlic/private keys corresponding to these
+    ##indxs
+    nth_keys_data = await user.generate_shared_secret_addr(len(user_accounts))
+
+    ##Generate scrypt key from the email and a random salt
+    ##encrypt the mnemonic with this AES Key
+    ##split the mnemonic
+    aes_encryption_salt, secret_shares = split_secret(requester["email"],
+                        user.decrypted_mnemonic, request.json["minimum_required"],
+                        len(request.json["email_list"]))
+
+    for (account, secret_share, index) in zip(user_accounts, secret_shares,
+                                        list(nth_keys_data.keys())):
+        logging.info(account)
+        logging.info(secret_share)
+        logging.info(index)
+        logging.info(nth_keys_data[index]["private_key"])
+        logging.info("\n\n")
+
+    async with aiohttp.ClientSession() as session:
+        await asyncio.gather(*[
+            submit_share_mnemonic(request.app, requester_address, account, secret_share, index, nth_keys_data[index]["private_key"])
+
+            for (account, secret_share, index) in zip(user_accounts, secret_shares,
+                                        list(nth_keys_data.keys()))
+        ])
+
+
+    #await submit_share_mnemonic(request.app, requester, user_accounts)
     return response.json(
             {
             'error': False,
@@ -189,130 +227,6 @@ async def get_otps(request):
 
     """
     pass
-
-
-@USERS_BP.get('/convert_mnemonic_sharing')
-async def register_mnemonic_sharing(request):
-    """
-    I am using bip39 specifications for 24 word mnemonic, Whenever user registers
-    with his/her password, A Scrypt key is generated from this password and used to
-    encrypt this mnemonic, The admin of the database in this way, cant decrypt it.
-
-    Lets say a user forgots his/her password, there is no way to recover his/her mnemonic.
-    One way is to design a mechanis in which he/she can share their mnemonic with other
-    users on the blockchain.
-    The mnemonic is broken down into lets say, 5 shamir secrets out of which, three are
-    necessary to recover the original mnemonic.
-
-    Since all the other accounts are already present on the blockchain, their account
-    has a "public" key which has the actual publick key from which this account
-    address was generated. The brief outline of accounts on blockchain is like this
-
-            public: hex encoded secp256k1 key from which this address was generated
-            created_on: timestamp
-            email: sha256 hash of email id
-            phone_number: sha256 of phone_number
-            secret_shared: list of public keys corresponding to random indexes
-                    the length of list is dependent upon the number of users with
-                    whom the mnemonic will be shared
-
-    The user at the time of registration creates five random indexes out of 2**32
-    and gets his public/private key pairs corresponding to these indexes. From
-    these public keys it generates a different kind of address, lets say
-    secret_sharing_address, The user then encrypts each shamir secret with other users
-    accounts public keys.
-
-        encrypted_shamir_secret: encrypted_shamir_secret
-        shared_with: other user account address
-        is_live: False
-        new_key: null
-        updated_on: latest timestamp when this contract was changed
-        updated_secret: False
-
-    for argument, Lets say these are the only keys. Five transaction of this kind
-    for five sifferent users will be floated.
-
-    Lets say the user forgots his/her password one day, he enters his email and
-    a new password.(The ownership of email can be chacked with OTP etc)
-    Two things will be calculated from these details
-    1. The sha256 hash of the email.
-    2. A new scrypt key from this new password.
-    This hash will then be searched in the blockchain, if a matching account is found,
-    The secret_shared key will be fetched.
-    secret_sharing_address addresses will be generated from each of these public addresses,
-    and then on each address, the key
-            "is_live": True
-            "new_key": Encrypted with corresponding public key (scrypt key)
-
-    Now since these are directed to different users, as soon as they will see
-    is_live is active, they will decrypt thir share with their private key and also
-    the scrypt key. They then encrypt the secret with this decrypted scrypt key.
-
-    Each user will now again change the contract state and set these key
-        updated_on
-        updated_secret: share encypted with scrypt key
-
-    as soon as the threshold of three users will be reached, Our user
-    will intiate recover password process, in which he again enter the new password
-    decrypts all the shared secrets, combine them , recovers original mnemonic
-    and then encrypts it again with this scrypt key and stores into the database.
-
-
-    Advantages:
-        1. No association can be drawn from secret_sharing_addresses, so no user
-            who is participating in this process can identify other user.
-        2. No one user can recover the mnemonic alone.
-        3. The Database administrator couldnt see the original mnemonic on the
-            entire process.
-
-
-
-    When a user shares their mnemonic with other users, either registered
-
-    Args:
-        list of account addresses with which this user wants to share mnemonic
-
-    Step1: check whether all these addresses exists on the blockchain
-            ##we dont hasve to worry about whether the user actuall knows these
-            people
-
-    Step 2: lets say user choose 5 other users and minimum users required to
-            recover password is 3,
-            user will generate 5 random indexes at share_mnemonic array and
-            generate 5 share_mnemonic transaction
-
-    step3: For every account addresses, it will get the public key of all the
-            accoutn addrsses, creates 5 shamir secret keys for his/her mnemonic
-
-    step4: generate 5 random AES keys and encrypts shamir secrets
-
-    Step5 :
-
-
-    When user forgets his her password, corresponding to his/her account in the
-    database
-    """
-    address = request.args.get("address")
-
-    if not address:
-        raise errors.CustomError("address is required")
-
-    instance = await SolveAddress(address, request.app.config.REST_API_URL)
-    return response.json(
-            {
-            'error': False,
-            'success': True,
-            'message': f"{instance.type} type found",
-            "data": instance.data,
-            })
-
-
-
-
-
-
-
-
 
 
 

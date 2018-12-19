@@ -11,3 +11,4 @@ sudo apt install build-essential automake pkg-config libtool libffi-dev libgmp-d
 sudo apt install libsecp256k1-dev
 sudo apt-get install python3.6-dev
 sudo apt-get install python-pycurl
+sudo apt-get install libgfshare-dev libtomcrypt-dev

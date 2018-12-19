@@ -6,6 +6,8 @@ from Crypto.Random import get_random_bytes
 import base64
 import binascii
 import random
+import coloredlogs, logging
+coloredlogs.install()
 
 def generate_child_key_index():
     ##ideally it should be 2**32 -1
@@ -33,6 +35,7 @@ def aes_encrypt(key, file_bytes):
 def aes_decrypt(key, ciphertext):
     if isinstance(ciphertext, str):
         ciphertext = ciphertext.encode()
+    logging.info (f"Secret just before decryption AES <<{ciphertext}>>")
     tag, nonce = ciphertext[:16], ciphertext[-16:]
     cipher = AES.new(key, AES.MODE_GCM, nonce)
     decrypted_text = cipher.decrypt_and_verify(ciphertext[16:-16], tag)

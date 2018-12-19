@@ -37,8 +37,8 @@
             "receive_asset": "receive_assets",
             "otp_email": "otp_email",
             "otp_mobile": "otp_mobile",
-            "otp_table": "otp_table"
-
+            "otp_table": "otp_table",
+            "share_secret": "share_secrets"
               },
 
     "STORAGE":{

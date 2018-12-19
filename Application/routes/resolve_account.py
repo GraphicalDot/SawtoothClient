@@ -2,16 +2,17 @@ from errors.errors import ApiBadRequest
 from errors.errors import ApiInternalError
 from itsdangerous import TimedJSONWebSignatureSerializer as Serializer
 import encryption.utils as encryption_utils
+from routes import route_utils
+
 from encryption import key_derivations
 from encryption import symmetric
 import uuid
 import binascii
 from remotecalls.remote_calls import generate_mnemonic
 from ledger import deserialize_state
-import ledger.utils as ledger_utils
 from addressing import addresser
 from db import accounts_query
-
+from remotecalls import remote_calls
 
 import coloredlogs, logging
 
@@ -33,7 +34,7 @@ class aobject(object):
 
 
 
-class SolveAccount(aobject):
+class ResolveAccount(aobject):
 
     async def __init__(self, requester, app):
         """
@@ -65,6 +66,15 @@ class SolveAccount(aobject):
             self.child_user_id = self.child_db["user_id"]
             self.zero_pub = self.org_state["public"] ##this will be added as a
             ##reference to asset to reflect which org account issues this certificate
+        elif requester["role"] == "USER":
+            self.org_address, self.org_state, self.org_db= \
+                            await self.user_details(requester["acc_zero_pub"])
+            self.child_address, self.child_state = None, None
+            self.role = requester["role"]
+            self.child_zero_pub = None
+            self.child_user_id = None
+            self.zero_pub = self.org_state["public"] ##this will be added as a
+
         else:
             ##this means the requester is orgnization itself, so its child_user_id
             ## and child_zero_pub is None,
@@ -75,22 +85,7 @@ class SolveAccount(aobject):
             self.child_zero_pub = None
             self.child_user_id = None
 
-            if not self.org_state:
-                ##this means that the requester is float_Account, only another
-                ## orgnization on behalf of this float_accout can act,
-                ## because float_account himself cant even login
-                logging.info("This is a Float account, from SolveAccount")
-                ##this means that requester is a float_account, the requester
-                ##float account adress can be generated with
-                ##TODO delete parent_pub on entriesin float_Accounts and replace it with public
-                self.org_address, self.org_state, self.org_db= await \
-                        self.pending_details(
-                                        requester["parent_pub"],
-                                        requester["parent_idx"])
-                self.zero_pub = None
-                self.child_user_id = None
-            else:
-                self.zero_pub = self.org_state["public"] ##this will be added as a
+            self.zero_pub = self.org_state["public"] ##this will be added as a
 
 
         self.decrypted_mnemonic = await self.decrypt_mnemonic()
@@ -99,23 +94,46 @@ class SolveAccount(aobject):
 
 
 
+    async def generate_shared_secret_addr(self, number):
+        """
+        THis will generate shared_Secret addresses,
+        Number : int , total number of addresses that will be generated
+        """
 
-    async def pending_details(self, public, index):
-        float_org_address = addresser.float_account_address(
-                            public, index)
+        shared_idxs = self.org_state.get("shared_secret")
+        idxs = []
+        if shared_idxs:
+            idxs = shared_idxs
 
-        float_org_state = await deserialize_state.deserialize_float_account(
-                            self.app.config.REST_API_URL, float_org_address)
+        for _ in range(0, number):
+            result = await route_utils.generate_key_index(shared_idxs)
+            idxs.append(result)
 
-        float_org_db = await accounts_query.find_on_key_pending(self.app,
-                                "parent_pub", public)
-
-        return float_org_address, float_org_state, float_org_db
+        return await remote_calls.key_index_keys(self.app, self.decrypted_mnemonic, idxs)
 
 
+        user_state = await deserialize_state.deserialize_user(
+                            self.app.config.REST_API_URL, user_address)
+
+        user_db = await accounts_query.find_on_key(self.app, "user_id",
+                                        user_state["user_id"])
+        return user_address, user_state, user_db
+
+
+
+    async def user_details(self, public):
+        user_address = addresser.user_address(
+                            public, 0)
+
+        user_state = await deserialize_state.deserialize_user(
+                            self.app.config.REST_API_URL, user_address)
+
+        user_db = await accounts_query.find_on_key(self.app, "user_id",
+                                        user_state["user_id"])
+        return user_address, user_state, user_db
 
     async def org_details(self, public):
-        org_address = addresser.create_organization_account_address(
+        org_address = addresser.organization_address(
                             public, 0)
 
         org_state = await deserialize_state.deserialize_org_account(
@@ -159,7 +177,7 @@ class SolveAccount(aobject):
 
         else:
             ##if we are getting float accounts for admin directly
-            decrypted_mnemonic = await ledger_utils.decrypted_user_mnemonic(
+            decrypted_mnemonic = await encryption_utils.decrypted_user_mnemonic(
                 self.app,
                 self.org_db["encrypted_admin_mnemonic"],
                 self.role)

@@ -29,15 +29,21 @@ def diffi_hellman(pub_key, priv_key):
 
 
 def pub_encrypt(text, public_key):
+    """
+    text: bytes
+    returns bytes type object
+    """
     try:
+        if isinstance(text, str):
+            text = text.encode()
         return encrypt(public_key, text)
     except Exception as e:
-        logger.error(f"While encrypting data with publickey{public_key} and data {text}is {e}")
+        logging.error(f"While encrypting data with publickey{public_key} and data {text}is {e}")
         raise Exception("Couldnt encrypt with public key")
 
 def priv_decrypt(cipher_text, private_key):
     try:
         return decrypt(private_key, cipher_text)
     except Exception as e:
-        logger.error(f"While encrypting data with private key {private_key} and data {cipher_text} is {e}")
+        logging.error(f"While encrypting data with private key {private_key} and data {cipher_text} is {e}")
         raise Exception("Couldnt decrypt with private key")

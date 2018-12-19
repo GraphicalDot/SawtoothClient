@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='payload.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\rpayload.proto\"\xe6\x04\n\x12TransactionPayload\x12\x35\n\x0cpayload_type\x18\x01 \x01(\x0e\x32\x1f.TransactionPayload.PayloadType\x12/\n\x13\x63reate_user_account\x18\x02 \x01(\x0b\x32\x12.CreateUserAccount\x12?\n\x1b\x63reate_organization_account\x18\x03 \x01(\x0b\x32\x1a.CreateOrganizationAccount\x12\x31\n\x14\x63reate_child_account\x18\x04 \x01(\x0b\x32\x13.CreateChildAccount\x12\"\n\x0c\x63reate_asset\x18\x06 \x01(\x0b\x32\x0c.CreateAsset\x12&\n\x0bshare_asset\x18\x07 \x01(\x0b\x32\x11.CreateShareAsset\x12,\n\x0etransfer_asset\x18\x08 \x01(\x0b\x32\x14.CreateTransferAsset\x12*\n\rreceive_asset\x18\t \x01(\x0b\x32\x13.CreateReceiveAsset\"\xcd\x01\n\x0bPayloadType\x12\x0e\n\nTYPE_UNSET\x10\x00\x12\x1f\n\x1b\x43REATE_ORGANIZATION_ACCOUNT\x10\x02\x12\x17\n\x13\x43REATE_USER_ACCOUNT\x10\x03\x12\x18\n\x14\x43REATE_CHILD_ACCOUNT\x10\x08\x12\x10\n\x0c\x43REATE_ASSET\x10\x04\x12\x0f\n\x0bSHARE_ASSET\x10\x05\x12\x10\n\x0cREVOKE_ASSET\x10\x06\x12\x12\n\x0eTRANSFER_ASSET\x10\x07\x12\x11\n\rRECEIVE_ASSET\x10\t\"\x80\x03\n\x11\x43reateUserAccount\x12\x0c\n\x04role\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0f\n\x07pancard\x18\x03 \x01(\t\x12\x0f\n\x07user_id\x18\x04 \x01(\t\x12\r\n\x05\x65mail\x18\x05 \x01(\t\x12\x12\n\nfirst_name\x18\x07 \x01(\t\x12\x11\n\tlast_name\x18\x08 \x01(\t\x12\x0c\n\x04time\x18\t \x01(\r\x12\x13\n\x0bindian_time\x18\n \x01(\t\x12\x12\n\ndeactivate\x18\x0b \x01(\x08\x12\x15\n\rdeactivate_on\x18\x0c \x01(\t\x12\x1d\n\x11\x63reate_asset_idxs\x18\r \x03(\rB\x02\x10\x01\x12\x1c\n\x10share_asset_idxs\x18\x0e \x03(\rB\x02\x10\x01\x12\x1e\n\x12\x63hild_account_idxs\x18\x0f \x03(\rB\x02\x10\x01\x12\x15\n\rshared_secret\x18\x10 \x03(\t\x12-\n\x17\x61uthenticity_signatures\x18\x11 \x03(\x0b\x32\x0c._Signatures\"\xf6\x03\n\x19\x43reateOrganizationAccount\x12\x17\n\x0fparent_zero_pub\x18\x01 \x01(\t\x12\x10\n\x08org_name\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x0f\n\x07pancard\x18\x04 \x01(\t\x12\x12\n\ngst_number\x18\x05 \x01(\t\x12\x12\n\ntan_number\x18\x06 \x01(\t\x12\x14\n\x0cphone_number\x18\x07 \x01(\t\x12\x0c\n\x04time\x18\x08 \x01(\r\x12\x13\n\x0bindian_time\x18\t \x01(\t\x12\x12\n\ndeactivate\x18\n \x01(\x08\x12\x15\n\rdeactivate_on\x18\x0b \x01(\t\x12\x0c\n\x04role\x18\x0c \x01(\t\x12\x13\n\x0bparent_role\x18\x0e \x01(\t\x12\x12\n\nparent_pub\x18\x0f \x01(\t\x12\x12\n\nparent_idx\x18\x10 \x01(\r\x12\x1a\n\x12\x66loat_account_idxs\x18\x11 \x03(\r\x12\x1a\n\x12\x63hild_account_idxs\x18\x12 \x03(\r\x12\x19\n\x11\x63reate_asset_idxs\x18\x13 \x03(\r\x12\x18\n\x10share_asset_idxs\x18\x14 \x03(\r\x12\x1a\n\x12receive_asset_idxs\x18\x15 \x03(\r\x12\x0f\n\x07user_id\x18\x16 \x01(\t\x12\x1d\n\x15\x66loat_account_address\x18\x17 \x01(\t\"\x8c\x04\n\x12\x43reateChildAccount\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x12\n\nfirst_name\x18\x03 \x01(\t\x12\x11\n\tlast_name\x18\x04 \x01(\t\x12\r\n\x05\x65mail\x18\x05 \x01(\t\x12\x0f\n\x07pancard\x18\x06 \x01(\t\x12\x12\n\ngst_number\x18\x07 \x01(\t\x12\x12\n\ntan_number\x18\x08 \x01(\t\x12\x10\n\x08org_name\x18\t \x01(\t\x12\x0c\n\x04time\x18\n \x01(\r\x12\x13\n\x0bindian_time\x18\x0b \x01(\t\x12\x12\n\ndeactivate\x18\x0c \x01(\x08\x12\x15\n\rdeactivate_on\x18\r \x01(\t\x12\x1a\n\x12\x66loat_account_idxs\x18\x0e \x03(\r\x12\x1d\n\x11\x63reate_asset_idxs\x18\x0f \x03(\rB\x02\x10\x01\x12\x1c\n\x10share_asset_idxs\x18\x10 \x03(\rB\x02\x10\x01\x12\x1e\n\x12receive_asset_idxs\x18\x11 \x03(\rB\x02\x10\x01\x12\x0c\n\x04role\x18\x12 \x01(\t\x12\x13\n\x0bparent_role\x18\x13 \x01(\t\x12\x12\n\nparent_idx\x18\x14 \x01(\r\x12\x17\n\x0fparent_zero_pub\x18\x15 \x01(\t\x12\x14\n\x0csigned_nonce\x18\x16 \x01(\t\x12\r\n\x05nonce\x18\x17 \x01(\r\x12\x12\n\nnonce_hash\x18\x18 \x01(\t\"\xae\x04\n\x0b\x43reateAsset\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\x0c\n\x04time\x18\x03 \x01(\r\x12\x12\n\nindiantime\x18\x04 \x01(\t\x12\x11\n\tfile_name\x18\x05 \x01(\t\x12\x11\n\tfile_hash\x18\x06 \x01(\t\x12\x0b\n\x03idx\x18\x07 \x01(\r\x12\x12\n\nmaster_key\x18\x08 \x01(\t\x12\x12\n\nmaster_url\x18\t \x01(\t\x12\x12\n\nexpired_on\x18\n \x01(\x02\x12\x0c\n\x04role\x18\x0b \x01(\t\x12\x1c\n\x05scope\x18\x0c \x01(\x0b\x32\r.PayloadScope\x12-\n\x17\x61uthenticity_signatures\x18\r \x03(\x0b\x32\x0c._Signatures\x12\x1a\n\x12ownership_transfer\x18\x0e \x01(\t\x12\x16\n\x0etransferred_on\x18\x0f \x01(\t\x12\x1a\n\x12ownership_received\x18\x10 \x01(\t\x12\x13\n\x0breceived_on\x18\x11 \x01(\t\x12\x10\n\x08zero_pub\x18\x12 \x01(\t\x12\x16\n\x0eparent_address\x18\x13 \x01(\t\x12\x1e\n\x16\x66lt_account_parent_pub\x18\x14 \x01(\t\x12\x1e\n\x16\x66lt_account_parent_idx\x18\x15 \x01(\r\x12\x13\n\x0bshared_with\x18\x16 \x03(\r\x12\x16\n\x0e\x63hild_zero_pub\x18\x17 \x01(\t\x12\x1d\n\x15issuer_child_zero_pub\x18\x18 \x01(\t\"\xf4\x02\n\x13\x43reateTransferAsset\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\x0c\n\x04time\x18\x03 \x01(\r\x12\x12\n\nindiantime\x18\x04 \x01(\t\x12\x11\n\tfile_name\x18\x05 \x01(\t\x12\x11\n\tfile_hash\x18\x06 \x01(\t\x12\x12\n\nmaster_key\x18\t \x01(\t\x12\x12\n\nmaster_url\x18\n \x01(\t\x12\x12\n\nexpired_on\x18\r \x01(\x02\x12\x1c\n\x05scope\x18\x10 \x01(\x0b\x32\r.PayloadScope\x12\x18\n\x10receiver_address\x18\x13 \x01(\t\x12\x16\n\x0eissuer_address\x18\x14 \x01(\t\x12\x12\n\nissuer_pub\x18\x15 \x01(\t\x12\x17\n\x0fissuer_zero_pub\x18\x16 \x01(\t\x12\x14\n\x0csigned_nonce\x18\x17 \x01(\t\x12\r\n\x05nonce\x18\x18 \x01(\r\x12\x1d\n\x15issuer_child_zero_pub\x18\x19 \x01(\t\"\xe4\x03\n\x10\x43reateShareAsset\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\x12\n\nmaster_key\x18\x03 \x01(\t\x12\x12\n\nmaster_url\x18\x04 \x01(\t\x12\x0c\n\x04time\x18\x05 \x01(\r\x12\x12\n\nindiantime\x18\x06 \x01(\t\x12\x11\n\tfile_name\x18\x07 \x01(\t\x12\x11\n\tfile_hash\x18\x08 \x01(\t\x12\x1e\n\x16original_asset_address\x18\t \x01(\t\x12\x12\n\nrevoked_on\x18\n \x01(\x02\x12\x10\n\x08\x63omments\x18\r \x01(\t\x12\x0b\n\x03idx\x18\x0e \x01(\r\x12\x19\n\x11\x61\x63\x63ount_signature\x18\x0f \x01(\t\x12\x17\n\x0f\x61sset_signature\x18\x10 \x01(\t\x12\r\n\x05nonce\x18\x11 \x01(\r\x12\x12\n\nnonce_hash\x18\x12 \x01(\t\x12\x1e\n\x16issuer_account_address\x18\x13 \x01(\t\x12\x16\n\x0e\x63hild_zero_pub\x18\x14 \x01(\t\x12\x13\n\x0bto_org_name\x18\x15 \x01(\t\x12\x16\n\x0eto_org_address\x18\x16 \x01(\t\x12\x1d\n\x15receive_asset_address\x18\x17 \x01(\t\x12\x18\n\x10unique_code_hash\x18\x18 \x01(\t\"\xa4\x03\n\x12\x43reateReceiveAsset\x12\x0c\n\x04_id_\x18\x01 \x01(\t\x12\x0c\n\x04time\x18\x02 \x01(\r\x12\x12\n\nindiantime\x18\x03 \x01(\t\x12\x0b\n\x03idx\x18\x04 \x01(\r\x12\x1e\n\x16\x61t_which_asset_expires\x18\x06 \x01(\x02\x12\x10\n\x08org_name\x18\x07 \x01(\t\x12\x13\n\x0borg_address\x18\x08 \x01(\t\x12\x10\n\x08org_role\x18\t \x01(\t\x12\x33\n\x15receive_asset_details\x18\n \x01(\x0b\x32\x14.ReceiveAssetDetails\x12\x16\n\x0e\x63hild_zero_pub\x18\x0b \x01(\t\x12\x14\n\x0csigned_nonce\x18\x0c \x01(\t\x12\r\n\x05nonce\x18\r \x01(\r\x12\x12\n\nnonce_hash\x18\x0e \x01(\t\x12\x14\n\x0corg_zero_pub\x18\x0f \x01(\t\x12\x18\n\x10unique_code_hash\x18\x10 \x01(\t\x12\x1d\n\x15\x65ncrypted_unique_code\x18\x11 \x01(\t\x12#\n\x1b\x65ncrypted_admin_unique_code\x18\x12 \x01(\t\"8\n\x13ReceiveAssetDetails\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\"x\n\x0cPayloadScope\x12\r\n\x05group\x18\x01 \x01(\t\x12\x11\n\tsub_group\x18\x02 \x01(\t\x12\r\n\x05\x66ield\x18\x03 \x01(\t\x12\x0e\n\x06nature\x18\x04 \x01(\t\x12\x12\n\noperations\x18\x05 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\"W\n\x0b_Signatures\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\r\n\x05nonce\x18\x02 \x01(\r\x12\x14\n\x0csigned_nonce\x18\x03 \x01(\t\x12\x12\n\nnonce_hash\x18\x04 \x01(\tb\x06proto3')
+  serialized_pb=_b('\n\rpayload.proto\"\xa2\x05\n\x12TransactionPayload\x12\x35\n\x0cpayload_type\x18\x01 \x01(\x0e\x32\x1f.TransactionPayload.PayloadType\x12/\n\x13\x63reate_user_account\x18\x02 \x01(\x0b\x32\x12.CreateUserAccount\x12?\n\x1b\x63reate_organization_account\x18\x03 \x01(\x0b\x32\x1a.CreateOrganizationAccount\x12\x31\n\x14\x63reate_child_account\x18\x04 \x01(\x0b\x32\x13.CreateChildAccount\x12\"\n\x0c\x63reate_asset\x18\x06 \x01(\x0b\x32\x0c.CreateAsset\x12&\n\x0bshare_asset\x18\x07 \x01(\x0b\x32\x11.CreateShareAsset\x12,\n\x0etransfer_asset\x18\x08 \x01(\x0b\x32\x14.CreateTransferAsset\x12*\n\rreceive_asset\x18\t \x01(\x0b\x32\x13.CreateReceiveAsset\x12(\n\x0cshare_secret\x18\n \x01(\x0b\x32\x12.CreateShareSecret\"\xdf\x01\n\x0bPayloadType\x12\x0e\n\nTYPE_UNSET\x10\x00\x12\x1f\n\x1b\x43REATE_ORGANIZATION_ACCOUNT\x10\x02\x12\x17\n\x13\x43REATE_USER_ACCOUNT\x10\x03\x12\x18\n\x14\x43REATE_CHILD_ACCOUNT\x10\x08\x12\x10\n\x0c\x43REATE_ASSET\x10\x04\x12\x0f\n\x0bSHARE_ASSET\x10\x05\x12\x10\n\x0cREVOKE_ASSET\x10\x06\x12\x12\n\x0eTRANSFER_ASSET\x10\x07\x12\x11\n\rRECEIVE_ASSET\x10\t\x12\x10\n\x0cSHARE_SECRET\x10\n\"[\n\x11\x43reateShareSecret\x12\x0e\n\x06secret\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x02 \x01(\x08\x12\x11\n\townership\x18\x03 \x01(\t\x12\x13\n\x0bsecret_hash\x18\x05 \x01(\t\"\x80\x03\n\x11\x43reateUserAccount\x12\x0c\n\x04role\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0f\n\x07pancard\x18\x03 \x01(\t\x12\x0f\n\x07user_id\x18\x04 \x01(\t\x12\r\n\x05\x65mail\x18\x05 \x01(\t\x12\x12\n\nfirst_name\x18\x07 \x01(\t\x12\x11\n\tlast_name\x18\x08 \x01(\t\x12\x0c\n\x04time\x18\t \x01(\r\x12\x13\n\x0bindian_time\x18\n \x01(\t\x12\x12\n\ndeactivate\x18\x0b \x01(\x08\x12\x15\n\rdeactivate_on\x18\x0c \x01(\t\x12\x1d\n\x11\x63reate_asset_idxs\x18\r \x03(\rB\x02\x10\x01\x12\x1c\n\x10share_asset_idxs\x18\x0e \x03(\rB\x02\x10\x01\x12\x1e\n\x12\x63hild_account_idxs\x18\x0f \x03(\rB\x02\x10\x01\x12\x15\n\rshared_secret\x18\x10 \x03(\t\x12-\n\x17\x61uthenticity_signatures\x18\x11 \x03(\x0b\x32\x0c._Signatures\"\xf6\x03\n\x19\x43reateOrganizationAccount\x12\x17\n\x0fparent_zero_pub\x18\x01 \x01(\t\x12\x10\n\x08org_name\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x0f\n\x07pancard\x18\x04 \x01(\t\x12\x12\n\ngst_number\x18\x05 \x01(\t\x12\x12\n\ntan_number\x18\x06 \x01(\t\x12\x14\n\x0cphone_number\x18\x07 \x01(\t\x12\x0c\n\x04time\x18\x08 \x01(\r\x12\x13\n\x0bindian_time\x18\t \x01(\t\x12\x12\n\ndeactivate\x18\n \x01(\x08\x12\x15\n\rdeactivate_on\x18\x0b \x01(\t\x12\x0c\n\x04role\x18\x0c \x01(\t\x12\x13\n\x0bparent_role\x18\x0e \x01(\t\x12\x12\n\nparent_pub\x18\x0f \x01(\t\x12\x12\n\nparent_idx\x18\x10 \x01(\r\x12\x1a\n\x12\x66loat_account_idxs\x18\x11 \x03(\r\x12\x1a\n\x12\x63hild_account_idxs\x18\x12 \x03(\r\x12\x19\n\x11\x63reate_asset_idxs\x18\x13 \x03(\r\x12\x18\n\x10share_asset_idxs\x18\x14 \x03(\r\x12\x1a\n\x12receive_asset_idxs\x18\x15 \x03(\r\x12\x0f\n\x07user_id\x18\x16 \x01(\t\x12\x1d\n\x15\x66loat_account_address\x18\x17 \x01(\t\"\x8c\x04\n\x12\x43reateChildAccount\x12\x0f\n\x07user_id\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x12\n\nfirst_name\x18\x03 \x01(\t\x12\x11\n\tlast_name\x18\x04 \x01(\t\x12\r\n\x05\x65mail\x18\x05 \x01(\t\x12\x0f\n\x07pancard\x18\x06 \x01(\t\x12\x12\n\ngst_number\x18\x07 \x01(\t\x12\x12\n\ntan_number\x18\x08 \x01(\t\x12\x10\n\x08org_name\x18\t \x01(\t\x12\x0c\n\x04time\x18\n \x01(\r\x12\x13\n\x0bindian_time\x18\x0b \x01(\t\x12\x12\n\ndeactivate\x18\x0c \x01(\x08\x12\x15\n\rdeactivate_on\x18\r \x01(\t\x12\x1a\n\x12\x66loat_account_idxs\x18\x0e \x03(\r\x12\x1d\n\x11\x63reate_asset_idxs\x18\x0f \x03(\rB\x02\x10\x01\x12\x1c\n\x10share_asset_idxs\x18\x10 \x03(\rB\x02\x10\x01\x12\x1e\n\x12receive_asset_idxs\x18\x11 \x03(\rB\x02\x10\x01\x12\x0c\n\x04role\x18\x12 \x01(\t\x12\x13\n\x0bparent_role\x18\x13 \x01(\t\x12\x12\n\nparent_idx\x18\x14 \x01(\r\x12\x17\n\x0fparent_zero_pub\x18\x15 \x01(\t\x12\x14\n\x0csigned_nonce\x18\x16 \x01(\t\x12\r\n\x05nonce\x18\x17 \x01(\r\x12\x12\n\nnonce_hash\x18\x18 \x01(\t\"\xae\x04\n\x0b\x43reateAsset\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\x0c\n\x04time\x18\x03 \x01(\r\x12\x12\n\nindiantime\x18\x04 \x01(\t\x12\x11\n\tfile_name\x18\x05 \x01(\t\x12\x11\n\tfile_hash\x18\x06 \x01(\t\x12\x0b\n\x03idx\x18\x07 \x01(\r\x12\x12\n\nmaster_key\x18\x08 \x01(\t\x12\x12\n\nmaster_url\x18\t \x01(\t\x12\x12\n\nexpired_on\x18\n \x01(\x02\x12\x0c\n\x04role\x18\x0b \x01(\t\x12\x1c\n\x05scope\x18\x0c \x01(\x0b\x32\r.PayloadScope\x12-\n\x17\x61uthenticity_signatures\x18\r \x03(\x0b\x32\x0c._Signatures\x12\x1a\n\x12ownership_transfer\x18\x0e \x01(\t\x12\x16\n\x0etransferred_on\x18\x0f \x01(\t\x12\x1a\n\x12ownership_received\x18\x10 \x01(\t\x12\x13\n\x0breceived_on\x18\x11 \x01(\t\x12\x10\n\x08zero_pub\x18\x12 \x01(\t\x12\x16\n\x0eparent_address\x18\x13 \x01(\t\x12\x1e\n\x16\x66lt_account_parent_pub\x18\x14 \x01(\t\x12\x1e\n\x16\x66lt_account_parent_idx\x18\x15 \x01(\r\x12\x13\n\x0bshared_with\x18\x16 \x03(\r\x12\x16\n\x0e\x63hild_zero_pub\x18\x17 \x01(\t\x12\x1d\n\x15issuer_child_zero_pub\x18\x18 \x01(\t\"\xf4\x02\n\x13\x43reateTransferAsset\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\x0c\n\x04time\x18\x03 \x01(\r\x12\x12\n\nindiantime\x18\x04 \x01(\t\x12\x11\n\tfile_name\x18\x05 \x01(\t\x12\x11\n\tfile_hash\x18\x06 \x01(\t\x12\x12\n\nmaster_key\x18\t \x01(\t\x12\x12\n\nmaster_url\x18\n \x01(\t\x12\x12\n\nexpired_on\x18\r \x01(\x02\x12\x1c\n\x05scope\x18\x10 \x01(\x0b\x32\r.PayloadScope\x12\x18\n\x10receiver_address\x18\x13 \x01(\t\x12\x16\n\x0eissuer_address\x18\x14 \x01(\t\x12\x12\n\nissuer_pub\x18\x15 \x01(\t\x12\x17\n\x0fissuer_zero_pub\x18\x16 \x01(\t\x12\x14\n\x0csigned_nonce\x18\x17 \x01(\t\x12\r\n\x05nonce\x18\x18 \x01(\r\x12\x1d\n\x15issuer_child_zero_pub\x18\x19 \x01(\t\"\xe4\x03\n\x10\x43reateShareAsset\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x0b\n\x03url\x18\x02 \x01(\t\x12\x12\n\nmaster_key\x18\x03 \x01(\t\x12\x12\n\nmaster_url\x18\x04 \x01(\t\x12\x0c\n\x04time\x18\x05 \x01(\r\x12\x12\n\nindiantime\x18\x06 \x01(\t\x12\x11\n\tfile_name\x18\x07 \x01(\t\x12\x11\n\tfile_hash\x18\x08 \x01(\t\x12\x1e\n\x16original_asset_address\x18\t \x01(\t\x12\x12\n\nrevoked_on\x18\n \x01(\x02\x12\x10\n\x08\x63omments\x18\r \x01(\t\x12\x0b\n\x03idx\x18\x0e \x01(\r\x12\x19\n\x11\x61\x63\x63ount_signature\x18\x0f \x01(\t\x12\x17\n\x0f\x61sset_signature\x18\x10 \x01(\t\x12\r\n\x05nonce\x18\x11 \x01(\r\x12\x12\n\nnonce_hash\x18\x12 \x01(\t\x12\x1e\n\x16issuer_account_address\x18\x13 \x01(\t\x12\x16\n\x0e\x63hild_zero_pub\x18\x14 \x01(\t\x12\x13\n\x0bto_org_name\x18\x15 \x01(\t\x12\x16\n\x0eto_org_address\x18\x16 \x01(\t\x12\x1d\n\x15receive_asset_address\x18\x17 \x01(\t\x12\x18\n\x10unique_code_hash\x18\x18 \x01(\t\"\xa4\x03\n\x12\x43reateReceiveAsset\x12\x0c\n\x04_id_\x18\x01 \x01(\t\x12\x0c\n\x04time\x18\x02 \x01(\r\x12\x12\n\nindiantime\x18\x03 \x01(\t\x12\x0b\n\x03idx\x18\x04 \x01(\r\x12\x1e\n\x16\x61t_which_asset_expires\x18\x06 \x01(\x02\x12\x10\n\x08org_name\x18\x07 \x01(\t\x12\x13\n\x0borg_address\x18\x08 \x01(\t\x12\x10\n\x08org_role\x18\t \x01(\t\x12\x33\n\x15receive_asset_details\x18\n \x01(\x0b\x32\x14.ReceiveAssetDetails\x12\x16\n\x0e\x63hild_zero_pub\x18\x0b \x01(\t\x12\x14\n\x0csigned_nonce\x18\x0c \x01(\t\x12\r\n\x05nonce\x18\r \x01(\r\x12\x12\n\nnonce_hash\x18\x0e \x01(\t\x12\x14\n\x0corg_zero_pub\x18\x0f \x01(\t\x12\x18\n\x10unique_code_hash\x18\x10 \x01(\t\x12\x1d\n\x15\x65ncrypted_unique_code\x18\x11 \x01(\t\x12#\n\x1b\x65ncrypted_admin_unique_code\x18\x12 \x01(\t\"8\n\x13ReceiveAssetDetails\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x05 \x01(\t\"x\n\x0cPayloadScope\x12\r\n\x05group\x18\x01 \x01(\t\x12\x11\n\tsub_group\x18\x02 \x01(\t\x12\r\n\x05\x66ield\x18\x03 \x01(\t\x12\x0e\n\x06nature\x18\x04 \x01(\t\x12\x12\n\noperations\x18\x05 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x06 \x01(\t\"W\n\x0b_Signatures\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\r\n\x05nonce\x18\x02 \x01(\r\x12\x14\n\x0csigned_nonce\x18\x03 \x01(\t\x12\x12\n\nnonce_hash\x18\x04 \x01(\tb\x06proto3')
 )
 
 
@@ -66,11 +66,15 @@ _TRANSACTIONPAYLOAD_PAYLOADTYPE = _descriptor.EnumDescriptor(
       name='RECEIVE_ASSET', index=8, number=9,
       options=None,
       type=None),
+    _descriptor.EnumValueDescriptor(
+      name='SHARE_SECRET', index=9, number=10,
+      options=None,
+      type=None),
   ],
   containing_type=None,
   options=None,
-  serialized_start=427,
-  serialized_end=632,
+  serialized_start=469,
+  serialized_end=692,
 )
 _sym_db.RegisterEnumDescriptor(_TRANSACTIONPAYLOAD_PAYLOADTYPE)
 
@@ -138,6 +142,13 @@ _TRANSACTIONPAYLOAD = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='share_secret', full_name='TransactionPayload.share_secret', index=8,
+      number=10, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -152,7 +163,59 @@ _TRANSACTIONPAYLOAD = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=18,
-  serialized_end=632,
+  serialized_end=692,
+)
+
+
+_CREATESHARESECRET = _descriptor.Descriptor(
+  name='CreateShareSecret',
+  full_name='CreateShareSecret',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='secret', full_name='CreateShareSecret.secret', index=0,
+      number=1, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='active', full_name='CreateShareSecret.active', index=1,
+      number=2, type=8, cpp_type=7, label=1,
+      has_default_value=False, default_value=False,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='ownership', full_name='CreateShareSecret.ownership', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='secret_hash', full_name='CreateShareSecret.secret_hash', index=3,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=694,
+  serialized_end=785,
 )
 
 
@@ -287,8 +350,8 @@ _CREATEUSERACCOUNT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=635,
-  serialized_end=1019,
+  serialized_start=788,
+  serialized_end=1172,
 )
 
 
@@ -465,8 +528,8 @@ _CREATEORGANIZATIONACCOUNT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1022,
-  serialized_end=1524,
+  serialized_start=1175,
+  serialized_end=1677,
 )
 
 
@@ -657,8 +720,8 @@ _CREATECHILDACCOUNT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1527,
-  serialized_end=2051,
+  serialized_start=1680,
+  serialized_end=2204,
 )
 
 
@@ -849,8 +912,8 @@ _CREATEASSET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2054,
-  serialized_end=2612,
+  serialized_start=2207,
+  serialized_end=2765,
 )
 
 
@@ -992,8 +1055,8 @@ _CREATETRANSFERASSET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2615,
-  serialized_end=2987,
+  serialized_start=2768,
+  serialized_end=3140,
 )
 
 
@@ -1170,8 +1233,8 @@ _CREATESHAREASSET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2990,
-  serialized_end=3474,
+  serialized_start=3143,
+  serialized_end=3627,
 )
 
 
@@ -1313,8 +1376,8 @@ _CREATERECEIVEASSET = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3477,
-  serialized_end=3897,
+  serialized_start=3630,
+  serialized_end=4050,
 )
 
 
@@ -1351,8 +1414,8 @@ _RECEIVEASSETDETAILS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3899,
-  serialized_end=3955,
+  serialized_start=4052,
+  serialized_end=4108,
 )
 
 
@@ -1417,8 +1480,8 @@ _PAYLOADSCOPE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3957,
-  serialized_end=4077,
+  serialized_start=4110,
+  serialized_end=4230,
 )
 
 
@@ -1469,8 +1532,8 @@ __SIGNATURES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=4079,
-  serialized_end=4166,
+  serialized_start=4232,
+  serialized_end=4319,
 )
 
 _TRANSACTIONPAYLOAD.fields_by_name['payload_type'].enum_type = _TRANSACTIONPAYLOAD_PAYLOADTYPE
@@ -1481,6 +1544,7 @@ _TRANSACTIONPAYLOAD.fields_by_name['create_asset'].message_type = _CREATEASSET
 _TRANSACTIONPAYLOAD.fields_by_name['share_asset'].message_type = _CREATESHAREASSET
 _TRANSACTIONPAYLOAD.fields_by_name['transfer_asset'].message_type = _CREATETRANSFERASSET
 _TRANSACTIONPAYLOAD.fields_by_name['receive_asset'].message_type = _CREATERECEIVEASSET
+_TRANSACTIONPAYLOAD.fields_by_name['share_secret'].message_type = _CREATESHARESECRET
 _TRANSACTIONPAYLOAD_PAYLOADTYPE.containing_type = _TRANSACTIONPAYLOAD
 _CREATEUSERACCOUNT.fields_by_name['authenticity_signatures'].message_type = __SIGNATURES
 _CREATEASSET.fields_by_name['scope'].message_type = _PAYLOADSCOPE
@@ -1488,6 +1552,7 @@ _CREATEASSET.fields_by_name['authenticity_signatures'].message_type = __SIGNATUR
 _CREATETRANSFERASSET.fields_by_name['scope'].message_type = _PAYLOADSCOPE
 _CREATERECEIVEASSET.fields_by_name['receive_asset_details'].message_type = _RECEIVEASSETDETAILS
 DESCRIPTOR.message_types_by_name['TransactionPayload'] = _TRANSACTIONPAYLOAD
+DESCRIPTOR.message_types_by_name['CreateShareSecret'] = _CREATESHARESECRET
 DESCRIPTOR.message_types_by_name['CreateUserAccount'] = _CREATEUSERACCOUNT
 DESCRIPTOR.message_types_by_name['CreateOrganizationAccount'] = _CREATEORGANIZATIONACCOUNT
 DESCRIPTOR.message_types_by_name['CreateChildAccount'] = _CREATECHILDACCOUNT
@@ -1506,6 +1571,13 @@ TransactionPayload = _reflection.GeneratedProtocolMessageType('TransactionPayloa
   # @@protoc_insertion_point(class_scope:TransactionPayload)
   ))
 _sym_db.RegisterMessage(TransactionPayload)
+
+CreateShareSecret = _reflection.GeneratedProtocolMessageType('CreateShareSecret', (_message.Message,), dict(
+  DESCRIPTOR = _CREATESHARESECRET,
+  __module__ = 'payload_pb2'
+  # @@protoc_insertion_point(class_scope:CreateShareSecret)
+  ))
+_sym_db.RegisterMessage(CreateShareSecret)
 
 CreateUserAccount = _reflection.GeneratedProtocolMessageType('CreateUserAccount', (_message.Message,), dict(
   DESCRIPTOR = _CREATEUSERACCOUNT,

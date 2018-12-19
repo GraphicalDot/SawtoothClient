@@ -13,6 +13,7 @@ message TransactionPayload {
         REVOKE_ASSET = 6;
         TRANSFER_ASSET = 7;
         RECEIVE_ASSET=9;
+        SHARE_SECRET=10;
     }
 
       PayloadType payload_type = 1;
@@ -28,7 +29,23 @@ message TransactionPayload {
       CreateShareAsset share_asset=7;
       CreateTransferAsset transfer_asset=8;
       CreateReceiveAsset receive_asset=9;
+      CreateShareSecret share_secret=10;
     }
+
+
+
+
+
+//Remeber to
+message CreateShareSecret {
+    string secret=1;
+    bool active=2;
+    //THis active will be True if the user has asked for password reset,
+    //Once reset, the secret will be updated again as encryption with same key
+    //is not good, New aes key will be generated with new salt
+    string ownership = 3; //Public key of the user to whom this will be shared
+    string secret_hash=5;
+}
 
 
 
