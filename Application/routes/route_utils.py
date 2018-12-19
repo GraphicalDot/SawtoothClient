@@ -188,8 +188,6 @@ async def new_account(app, pancard=None, phone_number=None, email=None, role=Non
     just phone_number and pancard, The account is not claimed yet
 
     """
-
-
     user_id = str(uuid.uuid4())
 
     if role != "ADMIN":
@@ -224,6 +222,42 @@ async def new_account(app, pancard=None, phone_number=None, email=None, role=Non
             "encrypted_admin_mnemonic": encrypted_admin_mnemonic,
             "acc_mstr_pub": master_pub,
             "acc_zero_pub": zero_pub}
+
+
+async def new_user_account(app, pancard=None, phone_number=None, email=None,
+                        role=None, first_name=None, last_name=None):
+    """
+    This method will be used to generate new mnemonic data when
+    any parent wants to upload some data on the basis of
+    just phone_number and pancard, The account is not claimed yet
+
+    """
+    user_id = str(uuid.uuid4())
+
+    master_pub, master_priv, zero_pub, zero_priv, mnemonic = await\
+        generate_mnemonic(app.config.GOAPI_URL)
+    encrypted_admin_mnemonic = encryption_utils.encrypt_mnemonic_pubkey(
+                                            mnemonic, app.config.ADMIN_ZERO_PUB)
+    _mnemonic= encryption_utils.decrypt_mnemonic_privkey(encrypted_admin_mnemonic,
+                                    app.config.ADMIN_ZERO_PRIV)
+
+
+    return {"user_id": user_id,
+            "first_name": first_name,
+            "last_name": last_name,
+            "role": role,
+            "share_asset_idxs": [],
+            "create_asset_idxs": [],
+            "child_account_idxs": [],
+            "shared_secret":[],
+            "pancard": pancard,
+            "phone_number": phone_number,
+            "email": email,
+            "encrypted_admin_mnemonic": encrypted_admin_mnemonic,
+            "acc_mstr_pub": master_pub,
+            "acc_zero_pub": zero_pub,
+            "deactivate": False,
+            "deactivate_on": None}
 
 
 

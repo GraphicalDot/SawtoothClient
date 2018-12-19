@@ -24,29 +24,17 @@ async def __send_organization_account(**in_data):
         indian_time=indian_time_stamp(),
         claimed_on(str): Date on which this flt account was claimed and converted to create account)
     """
-    inputs = [addresser.create_organization_account_address(
-                        account_id=in_data["txn_key"].get_public_key().as_hex(),
+    inputs = [addresser.organization_address(
+                        public=in_data["txn_key"].get_public_key().as_hex(),
                         index=0),
                 ]
 
 
-    outputs = [addresser.create_organization_account_address(
-                        account_id=in_data["txn_key"].get_public_key().as_hex(),
+    outputs = [addresser.organization_address(
+                        public=in_data["txn_key"].get_public_key().as_hex(),
                         index=0),
 
         ]
-
-    if in_data["role"] != "ADMIN":
-        inputs.append(addresser.float_account_address(
-                        account_id=in_data["parent_pub"],
-                        index=in_data["parent_idx"]))
-        outputs.append(addresser.float_account_address(
-                     account_id=in_data["parent_pub"],
-                     index=in_data["parent_idx"]))
-
-
-    if in_data.get("parent_pub"):
-        logging.info(f"This is the parent pub {in_data['parent_pub']}")
 
     account = payload_pb2.CreateOrganizationAccount(
             role = in_data["role"],

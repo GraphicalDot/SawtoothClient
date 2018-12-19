@@ -16,6 +16,7 @@ import db.accounts_query as accounts_db
 import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
+from ledger.accounts.user_account.submit_user_account import submit_user_account
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
 from addressing import addresser
@@ -93,7 +94,7 @@ async def register_user(request):
     """
     """
     required_fields = ["first_name", "last_name",
-        "email", "password", "phone_number"]
+        "email", "password", "phone_number", "pancard"]
 
     validate_fields(required_fields, request.json)
 
@@ -105,27 +106,51 @@ async def register_user(request):
     if await accounts_query.find_on_key(request.app, "phone_number", request.json["phone_number"]):
         raise errors.CustomError("This phone_number has already been registered")
 
+    required_pattern = re.compile('(?=.{6,})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%^&*()])')
+    if not required_pattern.match(request.json["password"]) or \
+                        len(request.json["password"]) <= 8:
+            raise errors.PasswordStrengthError()
 
-    
 
-    instance = await SolveAddress(address, request.app.config.REST_API_URL)
+    usr = await submit_user_account(request.app, pancard=request.json["pancard"], phone_number=request.json["phone_number"],
+                        email=request.json["email"], role="USER",
+                         password=request.json["password"], first_name=request.json["first_name"],
+                        last_name=request.json["last_name"])
+
     return response.json(
             {
             'error': False,
             'success': True,
-            'message': f"{instance.type} type found",
-            "data": instance.data,
+            "data": usr,
             })
 
 
 
+@USERS_BP.get('/mnemonic')
+@authorized()
+async def get_mnemonic(request):
+    """
+    """
+    pass
 
-@USERS_BP.get('/registration_no_mnemonic')
-async def register_user_no_mnemonic(request):
+
+@USERS_BP.get('/share_mnemonic')
+@authorized()
+async def share_mnemonic(request):
     """
     When a user taked the responsibility to own their mnemonic,
     if they forget their Mnemonic we cant do anything about it
     """
+
+    required_fields = ["email_list", "total_shares", "recovery_shares"]
+
+    validate_fields(required_fields, request.json)
+
+    if len(request.json["email_list"]) < total_shares or int(total_shares) <3:
+        raise errors.CustomError("To share passwords minimum 3 users are required")
+
+
+
     address = request.args.get("address")
 
     if not address:

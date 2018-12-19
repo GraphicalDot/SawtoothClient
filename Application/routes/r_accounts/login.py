@@ -35,7 +35,7 @@ async def login(request):
         raise ApiUnauthorized("Incorrect email or password")
 
     if auth_info["role"] != "ADMIN":
-        if auth_info["closed"]:
+        if auth_info["deactivate"]:
             raise ApiUnauthorized("Your account has been freezed,\
                 Please contact your parent organization")
     token = generate_auth_token(
