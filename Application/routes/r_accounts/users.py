@@ -232,7 +232,7 @@ async def forgot_password(request):
 
     """
 
-    required_fields = ["email", "otp_email", "phone_number", "otp_email"]
+    required_fields = ["email", "otp_email", "phone_number", "otp_mobile"]
 
     validate_fields(required_fields, request.json)
 
@@ -242,9 +242,11 @@ async def forgot_password(request):
     if not account_db:
         raise CustomError("This user doesnt exists, Please register first")
 
+    otp_email = int(request.json["otp_email"])
+    otp_mobile = int(request.json["otp_mobile"])
 
-    await verify_otp(request.app, request.json["otp_email"], request.json["email"],
-                        request.json["otp_email"], request.json["phone_number"])
+    await verify_otp(request.app, otp_email, request.json["email"],
+                        otp_mobile, request.json["phone_number"])
 
     """
     if account_db["role"] == "USER":
@@ -276,35 +278,35 @@ async def forgot_password(request):
 
 async def verify_otp(app, otp_email, email,  otp_mobile, phone_number):
 
-    otp_mobile = await accounts_query.find_mobile_otp(
+    otp_mobile_db = await accounts_query.find_mobile_otp(
                         app, phone_number)
 
-    otp_email = await accounts_query.find_email_otp(
+    otp_email_db = await accounts_query.find_email_otp(
                         app, email)
 
-    if not otp_mobile:
+    if not otp_mobile_db:
         raise errors.CustomError("No mobile otp exists")
 
-    if not otp_email:
+    if not otp_email_db:
         raise errors.CustomError("No Email otp exists")
 
     #if not otp_email["otp_verified"]:
     #    raise errors.CustomError("This account has already been verified")
 
 
-
-    if otp_mobile != otp_mobile:
-        raise CustomError("OTP received is incorrect for phone_number")
+    if otp_mobile != otp_mobile_db["mobile_otp"]:
+        logging.info(f"OTP_MOBILE <{otp_mobile}> OTP_MOBILE_DB <{otp_mobile_db}>")
+        raise errors.CustomError("OTP received is incorrect for phone_number")
     logging.info("Otp for mobile has been verified")
 
 
-    if otp_email != otp_email:
-        raise CustomError("OTP received is incorrect for email")
+    if otp_email != otp_email_db["email_otp"]:
+        raise errors.CustomError("OTP received is incorrect for email")
     logging.info("otp for email has been verified")
 
     right_now = revoke_time_stamp(days=0, hours=0, minutes=10)
 
-    if otp_mobile["validity"] < right_now:
+    if otp_mobile_db["validity"] < right_now:
         raise errors.CustomError("Validity of OTP expired, please generate otp again")
 
 

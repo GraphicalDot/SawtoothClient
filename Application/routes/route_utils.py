@@ -262,28 +262,7 @@ async def new_user_account(app, pancard=None, phone_number=None, email=None,
 
 
 
-async def sendEmail(app, user_id, email, validity):
 
-    email_otp = random.randint(100000, 999999)
-
-    try:
-        s = smtplib.SMTP()
-        s.connect('email-smtp.us-west-2.amazonaws.com', 587)
-        s.starttls()
-        s.login('', '')
-
-    except Exception as e:
-        logging.info("Somethign went wrong - %s" %e)
-
-    msg = 'From: honey.ashthana@qcin.org\nSubject: Test email\n\nThis is test email\n\nCode is ' + str(email_otp)
-
-    s.sendmail('honey.ashthana@qcin.org', email, msg)
-
-    await accounts_query.insert_otps(app, "email", email_otp, user_id, email, validity)
-    s.quit()
-
-
-# Replace sender@example.
 
 
 
