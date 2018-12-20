@@ -7,7 +7,7 @@ from routes.route_utils import validate_fields
 from routes.route_utils import new_account
 from routes.route_utils import set_password
 from routes.route_utils import user_mnemonic_frm_password
-from routes.route_utils import send_message, revoke_time_stamp
+from routes.route_utils import send_message, revoke_time_stamp, now_time_stamp
 
 import hashlib
 from db import accounts_query
@@ -30,10 +30,11 @@ from encryption import symmetric
 from encryption import signatures
 import aiohttp
 import asyncio
+import datetime
 from ledger.split_secret import split_secret, combine_secret
 from ledger import deserialize_state
 from routes.resolve_account import ResolveAccount
-
+from ledger import deserialize_state
 import coloredlogs, logging
 coloredlogs.install()
 
@@ -236,7 +237,7 @@ async def forgot_password(request):
 
     validate_fields(required_fields, request.json)
 
-    account_db = accounts_query.find_user(request.app, request.json["phone_number"],
+    account_db = await accounts_query.find_user(request.app, request.json["phone_number"],
                         request.json["email"])
 
     if not account_db:
@@ -248,11 +249,13 @@ async def forgot_password(request):
     await verify_otp(request.app, otp_email, request.json["email"],
                         otp_mobile, request.json["phone_number"])
 
-    """
     if account_db["role"] == "USER":
         address = addresser.user_address(account_db["acc_zero_pub"], 0)
+        state = await deserialize_state.deserialize_user(
+                        request.app.config.REST_API_URL,
+                                address)
 
-    elif account_db["role"]: "ORGANIZATION":
+    elif account_db["role"] == "ORGANIZATION":
         address = addresser.organization_address(account_db["acc_zero_pub"], 0)
 
     elif account_db["role"] == "CHILD":
@@ -262,10 +265,8 @@ async def forgot_password(request):
         raise CustomError("Undefined role for this user")
 
 
+    logging.info(state)
 
-
-    async def sendEmail(app, user_id, email, validity):
-    """
     return response.json(
                {
                 'error': False,
@@ -304,12 +305,9 @@ async def verify_otp(app, otp_email, email,  otp_mobile, phone_number):
         raise errors.CustomError("OTP received is incorrect for email")
     logging.info("otp for email has been verified")
 
-    right_now = revoke_time_stamp(days=0, hours=0, minutes=10)
 
-    if otp_mobile_db["validity"] < right_now:
+    if otp_mobile_db["validity"] < now_time_stamp():
         raise errors.CustomError("Validity of OTP expired, please generate otp again")
-
-
     #await accounts_query.account_verified(app, email, phone_number)
 
     return
@@ -329,7 +327,7 @@ async def get_otp(request):
                         request.json["email"])
 
 
-    validity = revoke_time_stamp(days=0, hours=0, minutes=20)
+    validity = revoke_time_stamp(days=0, hours=2, minutes=0)
     logging.info(account_db)
     await ses_email(request.app, request.json["email"], account_db["user_id"],
                     validity, "Recovery OTP from Remedium", recovery=True)
