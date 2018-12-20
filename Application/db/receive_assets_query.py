@@ -3,7 +3,7 @@ import rethinkdb as r
 from rethinkdb.errors import ReqlNonExistenceError
 from errors.errors import ApiBadRequest, AccountCreationError, \
             AssetCreationError, DBError
-from db.accounts_query import find_user_field, find_on_key, cursor_to_result
+#from db.accounts_query import find_user_field, find_on_key, cursor_to_result
 
 
 

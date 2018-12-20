@@ -6,7 +6,9 @@ from .authorization import authorized
 from routes.route_utils import validate_fields
 from routes.route_utils import new_account
 from routes.route_utils import set_password
-from routes.route_utils import user_mnemonic_frm_password, sendEmail, sendMessage
+from routes.route_utils import user_mnemonic_frm_password
+from routes.route_utils import send_message, revoke_time_stamp
+
 import hashlib
 from db import accounts_query
 
@@ -35,6 +37,8 @@ from routes.resolve_account import ResolveAccount
 import coloredlogs, logging
 coloredlogs.install()
 
+
+from .send_email import ses_email
 
 from ._format_api_result import format_get_organization_account,\
                                 format_get_children,\
@@ -192,16 +196,7 @@ async def share_mnemonic(request, requester):
                         user.decrypted_mnemonic, request.json["minimum_required"],
                         len(request.json["email_list"]))
 
-    for (account, secret_share, index) in zip(user_accounts, secret_shares,
-                                        list(nth_keys_data.keys())):
-        logging.info(account)
-        logging.info(secret_share)
-        logging.info(index)
-        logging.info(nth_keys_data[index]["private_key"])
-        logging.info("\n\n")
 
-
-    logging.info(f"This is the requester address {requester_address}")
 
     #index = list(nth_keys_data.keys())[0]
     await share_mnemonic_batch_submit(request.app, requester_address, user_accounts, secret_shares, nth_keys_data)
@@ -226,15 +221,126 @@ async def share_mnemonic(request, requester):
 
 
 
+
+@USERS_BP.post('/forgot_password')
+async def forgot_password(request):
+    """
+    This api will be used when the user forgot their password
+    and they have chosed the second option where they have stored their mnemonic
+    with other users on the blockchain.
+
+
+    """
+
+    required_fields = ["email", "otp_email", "phone_number", "otp_email"]
+
+    validate_fields(required_fields, request.json)
+
+    account_db = accounts_query.find_user(request.app, request.json["phone_number"],
+                        request.json["email"])
+
+    if not account_db:
+        raise CustomError("This user doesnt exists, Please register first")
+
+
+    await verify_otp(request.app, request.json["otp_email"], request.json["email"],
+                        request.json["otp_email"], request.json["phone_number"])
+
+    """
+    if account_db["role"] == "USER":
+        address = addresser.user_address(account_db["acc_zero_pub"], 0)
+
+    elif account_db["role"]: "ORGANIZATION":
+        address = addresser.organization_address(account_db["acc_zero_pub"], 0)
+
+    elif account_db["role"] == "CHILD":
+        ##TODO
+        pass
+    else:
+        raise CustomError("Undefined role for this user")
+
+
+
+
+    async def sendEmail(app, user_id, email, validity):
+    """
+    return response.json(
+               {
+                'error': False,
+                'success': True,
+                'message': "Success",
+                })
+
+
+
+
+async def verify_otp(app, otp_email, email,  otp_mobile, phone_number):
+
+    otp_mobile = await accounts_query.find_mobile_otp(
+                        app, phone_number)
+
+    otp_email = await accounts_query.find_email_otp(
+                        app, email)
+
+    if not otp_mobile:
+        raise errors.CustomError("No mobile otp exists")
+
+    if not otp_email:
+        raise errors.CustomError("No Email otp exists")
+
+    #if not otp_email["otp_verified"]:
+    #    raise errors.CustomError("This account has already been verified")
+
+
+
+    if otp_mobile != otp_mobile:
+        raise CustomError("OTP received is incorrect for phone_number")
+    logging.info("Otp for mobile has been verified")
+
+
+    if otp_email != otp_email:
+        raise CustomError("OTP received is incorrect for email")
+    logging.info("otp for email has been verified")
+
+    right_now = revoke_time_stamp(days=0, hours=0, minutes=10)
+
+    if otp_mobile["validity"] < right_now:
+        raise errors.CustomError("Validity of OTP expired, please generate otp again")
+
+
+    #await accounts_query.account_verified(app, email, phone_number)
+
+    return
+
+
+
+
+
 @USERS_BP.post('/get_otps')
-async def get_otps(request):
-    """
-    Args:
-        A list of email_ids and phone_numbers to receive OTP's
+async def get_otp(request):
+    required_fields = ["email", "phone_number"]
+    validate_fields(required_fields, request.json)
+    if len(str(request.json["phone_number"])) != 10:
+        raise errors.CustomError("Incoreect length of Phone number")
 
-    """
-    pass
+    account_db = await accounts_query.find_user(request.app, request.json["phone_number"],
+                        request.json["email"])
 
+
+    validity = revoke_time_stamp(days=0, hours=0, minutes=20)
+    logging.info(account_db)
+    await ses_email(request.app, request.json["email"], account_db["user_id"],
+                    validity, "Recovery OTP from Remedium", recovery=True)
+
+    await send_message(request.app, account_db["user_id"],
+                    request.json["phone_number"], validity)
+
+    return response.json(
+               {
+                'error': False,
+                'success': True,
+                'message': "Please check your Email and Phone number for OTP",
+                })
 
 
 
@@ -356,73 +462,6 @@ async def create_child(request, requester):
 
 
 
-@ACCOUNTS_BP.post('accounts/get_otp')
-async def get_otp(request):
-    required_fields = ["email", "phone_number"]
-    validate_fields(required_fields, request.json)
-    if len(str(request.json["phone_number"])) != 10:
-        raise errors.CustomError("Incoreect length of Phone number")
-
-    pending_user = await accounts_db.find_pending_account_email_phone(request.app,
-                            request.json["phone_number"],
-                            request.json["email"])
-
-    if not pending_user:
-        raise errors.PendingAccountError()
-
-    #if user exists but his/her account has already been claimed
-    if pending_user["claimed"]:
-        raise errors.ClaimAccountError()
-
-    validity = upload_utils.revoke_time_stamp(days=0, hours=0, minutes=10)
-    await sendEmail(request.app, pending_user["user_id"],
-                    request.json["email"], validity)
-    await sendMessage(request.app, pending_user["user_id"],
-                    request.json["phone_number"], validity)
-    return response.json(
-               {
-                'error': False,
-                'success': True,
-                'message': "Please check your Email and Phone number for OTP",
-                })
-
-
-async def verify_otp(app, otp_email, email,  otp_mobile, phone_number):
-
-    otp_mobile = await accounts_query.find_mobile_otp(
-                        app, phone_number)
-
-    otp_email = await accounts_query.find_email_otp(
-                        app, email)
-
-    if not otp_mobile:
-        raise errors.CustomError("No mobile otp exists")
-
-
-    if not otp_email:
-        raise errors.CustomError("No Email otp exists")
-
-    if not otp_email["otp_verified"]:
-        raise errors.CustomError("This account has already been verified")
-
-
-
-    if otp_mobile != otp_mobile:
-        raise CustomError("OTP received is incorrect for phone_number")
-
-
-    if otp_email != otp_email:
-        raise CustomError("OTP received is incorrect for email")
-
-    right_now = upload_utils.revoke_time_stamp(days=0, hours=0, minutes=10)
-
-    if otp_mobile["validity"] < right_now:
-        raise errors.CustomError("Validity of OTP expired, please generate otp again")
-
-
-    await accounts_query.account_verified(app, email, phone_number)
-
-    return
 
 @ACCOUNTS_BP.post('accounts/claim_account')
 async def claim_account(request):

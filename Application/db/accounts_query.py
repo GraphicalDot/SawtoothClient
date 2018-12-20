@@ -63,19 +63,6 @@ async def find_orgnization_account(app, org_name, pancard, email):
 
 
 
-
-
-##Required to get he specific field present in the database entry like flt_acc_idxs
-##at user_id
-async def find_user_field(app, user_id, field_name):
-    cursor = await r.table(app.config.DATABASE["users"])\
-            .filter({"user_id": user_id})\
-            .get_field(field_name)\
-            .run(app.config.DB)
-    return await cursor_to_result(cursor)
-
-
-
 ##find account on the basis of any key like user_id
 async def find_on_key(app, key, value):
     try:
@@ -88,9 +75,9 @@ async def find_on_key(app, key, value):
     return await cursor_to_result(cursor)
 
 
-async def find_on_key_pending(app, key, value):
+async def find_on_key(app, key, value):
     try:
-        cursor = await r.table(app.config.DATABASE["pending_users"])\
+        cursor = await r.table(app.config.DATABASE["users"])\
             .filter(r.row[key] == value)\
             .run(app.config.DB)
     except Exception as e:
@@ -98,21 +85,6 @@ async def find_on_key_pending(app, key, value):
 
     return await cursor_to_result(cursor)
 
-##as name suggests required to insert a pending account into the pending users table
-async def insert_pending_account(app, data):
-    if not data:
-        logging.info("Empty data cannot be insrted into the Database")
-        return
-    try:
-        f = await r.table(app.config.DATABASE["pending_users"])\
-                .insert(data)\
-                .run(app.config.DB)
-
-    except Exception as e:
-        logging.info(f"Insert account failed with error --<{e}>--")
-
-    logging.info(f"Insert parent data successful with message --<{f}>--")
-    return
 
 
 async def insert_otps(app, _type, otp, user_id, value, validity):
@@ -127,11 +99,12 @@ async def insert_otps(app, _type, otp, user_id, value, validity):
                 "email": value
                 }
 
+            logging.info(data)
             f = await r.table(app.config.DATABASE["otp_email"])\
                 .insert(data, conflict="update")\
                 .run(app.config.DB)
 
-        elif _type == "mobile":
+        else:
             data = {
                 "mobile_otp": otp,
                 "user_id": user_id,
@@ -139,13 +112,14 @@ async def insert_otps(app, _type, otp, user_id, value, validity):
                 "otp_verified": False,
                 "phone_number": value
                 }
+            logging.info(data)
 
             f = await r.table(app.config.DATABASE["otp_mobile"])\
                 .insert(data,   conflict="update")\
                 .run(app.config.DB)
         logging.info(f"Insert otp data successful with message --<{f}>--")
     except Exception as e:
-        logging.info(f"Insert account failed with error --<{e}>--")
+        logging.error(f"Insert otp  in {_type} failed with error --<{e}>--")
 
     return
 
@@ -350,20 +324,10 @@ async def find_user_mobile_otp(app, key, value):
 
 
 
-async def find_user(pancard, phone_number, email, app):
-    try:
-        if not pancard:
-            query = {"email": email, "phone_number": phone_number}
-        else:
-            query = {"pancard": pancard, "phone_number": phone_number,
-                    "email": email}
-        cursor = await r.table(app.config.DATABASE["user_table"])\
-            .filter(query)\
+async def find_user(app, phone_number, email):
+    cursor = await r.table(app.config.DATABASE["users"])\
+            .filter({"email": email, "phone_number": phone_number})\
             .run(app.config.DB)
-
-    except Exception as e:
-        return False
-
     return await cursor_to_result(cursor)
 
 

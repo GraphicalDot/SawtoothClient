@@ -58,6 +58,9 @@
       },
 
     "GOAPI_URL": "172.28.128.1:8001",
-    "TYPE": ["ORGANIZATION", "CHILD"]
-
+    "TYPE": ["ORGANIZATION", "CHILD", "USER"],
+    "USERNAME_SMTP":"AKIAIXMV4BMYSA3QJUFQ",
+    "PASSWORD_SMTP": "AihLkZeSL64n+BnEI4VuH9vLDjIt1sa2O5GJ0G4kV4zi",
+    "HOST_SMTP": "email-smtp.us-west-2.amazonaws.com",
+    "PORT_SMTP": 587
 }

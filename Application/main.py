@@ -261,4 +261,8 @@ def main():
 
 
 if __name__ == "__main__":
+    # ret.connect('13.233.46.185', 28015, password="32d10aa2-13d9-593d-9f4b-ccc871d493b5").repl()
+    #ret.db("remediumdb").table("otp_email").index_create("email").run()
+    #ret.db("remediumdb").table("otp_mobile").index_create("phone_number").run()
+
     main()

@@ -42,6 +42,7 @@ async def boilerplate_user_registration(user):
 
     elif response.status_code == 400:
 
+        logging.error(user)
         logging.error(response.json())
         assert_equals(user_flag, True)
 
@@ -83,10 +84,8 @@ async def test_register_users():
     return f
 
 
-
 async def test_share_mnemonic():
     await boilerplate_share_mnemonic(user1, [user2["email"], user3["email"], user4["email"], user5["email"]])
-
 
 
 try:

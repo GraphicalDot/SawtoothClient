@@ -268,7 +268,7 @@ async def sendEmail(app, user_id, email, validity):
 
     try:
         s = smtplib.SMTP()
-        s.connect('email-smtp.eu-west-1.amazonaws.com', 587)
+        s.connect('email-smtp.us-west-2.amazonaws.com', 587)
         s.starttls()
         s.login('', '')
 
@@ -282,16 +282,21 @@ async def sendEmail(app, user_id, email, validity):
     await accounts_query.insert_otps(app, "email", email_otp, user_id, email, validity)
     s.quit()
 
-async def sendMessage(app, user_id, phone_number, validity):
+
+# Replace sender@example.
+
+
+
+async def send_message(app, user_id, phone_number, validity):
     mobile_otp = random.randint(100000,999999)
     msg = 'Hi, %s this is your otp %s' %(user_id, mobile_otp)
     #client = boto3.client('sns','eu-west-1')
 
     client = boto3.client(
         "sns",
-        aws_access_key_id='AKIAJV4L4DS37AP37LZQ',
-        aws_secret_access_key='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',
-        region_name="eu-west-1"
+        aws_access_key_id='AKIAJIZ2AR2TSXLGCH5A',
+        aws_secret_access_key='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',
+        region_name="us-west-2"
         )
 
     logging.info("This is the phone number on which OTP isbeing sent +91-%s"%phone_number)

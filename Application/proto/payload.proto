@@ -49,6 +49,7 @@ message CreateShareSecret {
     string role=6;
     uint32 idx=7;
     string user_address=8;
+    string reset_key=9;
 }
 
 

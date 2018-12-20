@@ -10,10 +10,10 @@ admin_data =  {'master_private_key': '7ae0966ecc6d93054c21cf63c3467f83c320bc5dc8
   'zeroth_private_key': 'e95e5224f452c3d1d5c27049e8afe7dca78e375cb62295f2356d7633903852bb',
   'zeroth_public_key': '0344d1d94f6cb733d83b50d89d162596b13beecba4102ce5519b28d57ef5a1a3b8'}
 
-user1 = {'first_name': 'Alexander',
- 'last_name': 'Gray',
- 'email': 'pamelabarnes@gmail.com',
- 'phone_number': '08565981122',
+user1 = {'first_name': 'Saurav',
+ 'last_name': 'Verma',
+ 'email': 'houzier.saurav@gmail.com',
+ 'phone_number': '9315048070',
  'password': '84Ll*qtG)p',
  'pancard': '978-1-949144-33-8'}
 
