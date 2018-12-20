@@ -100,13 +100,13 @@ class ResolveAccount(aobject):
         Number : int , total number of addresses that will be generated
         """
 
-        shared_idxs = self.org_state.get("shared_secret")
+        #shared_idxs = self.org_state.get("shared_secret")
         idxs = []
-        if shared_idxs:
-            idxs = shared_idxs
+        #if shared_idxs:
+        #    idxs = shared_idxs
 
         for _ in range(0, number):
-            result = await route_utils.generate_key_index(shared_idxs)
+            result = await route_utils.generate_key_index(idxs)
             idxs.append(result)
 
         return await remote_calls.key_index_keys(self.app, self.decrypted_mnemonic, idxs)

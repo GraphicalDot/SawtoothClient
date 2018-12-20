@@ -17,7 +17,7 @@ import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
 from ledger.accounts.user_account.submit_user_account import submit_user_account
-from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import submit_share_mnemonic
+from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import share_mnemonic_batch_submit
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
 from addressing import addresser
@@ -200,14 +200,21 @@ async def share_mnemonic(request, requester):
         logging.info(nth_keys_data[index]["private_key"])
         logging.info("\n\n")
 
+
+    logging.info(f"This is the requester address {requester_address}")
+
+    #index = list(nth_keys_data.keys())[0]
+    await share_mnemonic_batch_submit(request.app, requester_address, user_accounts, secret_shares, nth_keys_data)
+
+    """
     async with aiohttp.ClientSession() as session:
         await asyncio.gather(*[
-            submit_share_mnemonic(request.app, requester_address, account, secret_share, index, nth_keys_data[index]["private_key"])
+            submit_share_mnemonic(request.app, requester_address, account, secret_share, int(index), nth_keys_data[index]["private_key"])
 
             for (account, secret_share, index) in zip(user_accounts, secret_shares,
                                         list(nth_keys_data.keys()))
         ])
-
+    """
 
     #await submit_share_mnemonic(request.app, requester, user_accounts)
     return response.json(

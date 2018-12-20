@@ -44,7 +44,11 @@ message CreateShareSecret {
     //Once reset, the secret will be updated again as encryption with same key
     //is not good, New aes key will be generated with new salt
     string ownership = 3; //Public key of the user to whom this will be shared
-    string secret_hash=5;
+    string secret_hash=4;
+    string key=5;
+    string role=6;
+    uint32 idx=7;
+    string user_address=8;
 }
 
 
