@@ -20,6 +20,7 @@ import re
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
 from ledger.accounts.user_account.submit_user_account import submit_user_account
 from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import share_mnemonic_batch_submit
+from ledger.mnemonics.activate_shares.submit_activate_shares import activate_shares_batch_submit
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
 from addressing import addresser
@@ -234,9 +235,16 @@ async def forgot_password(request):
 
     """
 
-    required_fields = ["email", "otp_email", "phone_number", "otp_mobile"]
+    required_fields = ["email", "otp_email", "phone_number", "otp_mobile", "new_password"]
 
     validate_fields(required_fields, request.json)
+
+    required_pattern = re.compile('(?=.{6,})(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*[@#$%^&*()])')
+    if not required_pattern.match(request.json["new_password"]) or \
+                        len(request.json["new_password"]) <= 8:
+            raise errors.PasswordStrengthError()
+
+
 
     account_db = await accounts_query.find_user(request.app, request.json["phone_number"],
                         request.json["email"])
@@ -254,8 +262,9 @@ async def forgot_password(request):
         address = addresser.user_address(account_db["acc_zero_pub"], 0)
         state = await deserialize_state.deserialize_user(
                         request.app.config.REST_API_URL,
-                                address)
+                        address)
 
+        await activate_shares_batch_submit(request.app, account_db, request.json["new_password"])
     elif account_db["role"] == "ORGANIZATION":
         address = addresser.organization_address(account_db["acc_zero_pub"], 0)
 

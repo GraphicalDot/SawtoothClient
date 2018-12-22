@@ -3,7 +3,7 @@
 
 from protocompiled import float_account_pb2, account_pb2, asset_pb2, \
                 organization_account_pb2, child_account_pb2, receive_asset_pb2, \
-                share_asset_pb2, user_pb2
+                share_asset_pb2, user_pb2, share_secret_pb2
 from google.protobuf.json_format import MessageToDict
 import requests
 import json
@@ -105,6 +105,17 @@ async def deserialize_org_account(REST_API_URL, address):
 
         return account
 
+async def deserialize_share_secret(REST_API_URL, address):
+        logging.info(f"Now deserializing share_secret present on {address}")
+        state_data = await address_state(REST_API_URL, address)
+        ##decoding data stored on the blockchain
+        if not state_data:
+            return False
+        acc = share_secret_pb2.ShareSecret()
+        acc.ParseFromString(state_data)
+        asset = MessageToDict(acc, preserving_proto_field_name=True)
+        asset.update({"address": address})
+        return asset
 
 async def deserialize_asset(REST_API_URL, address):
         logging.info(f"Now deserializing asset present on {address}")

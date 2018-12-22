@@ -14,6 +14,7 @@ message TransactionPayload {
         TRANSFER_ASSET = 7;
         RECEIVE_ASSET=9;
         SHARE_SECRET=10;
+        ACTIVATE_SECRET=11;
     }
 
       PayloadType payload_type = 1;
@@ -30,10 +31,21 @@ message TransactionPayload {
       CreateTransferAsset transfer_asset=8;
       CreateReceiveAsset receive_asset=9;
       CreateShareSecret share_secret=10;
+      CreateActivateSecret activate_secret=11;
     }
 
 
 
+
+
+message CreateActivateSecret {
+    string share_secret_address=1;
+    string reset_key=2;
+    uint32 nonce=3;
+    string nonce_hash=4;
+    string signed_nonce = 5;
+    string admin_address = 6;
+}
 
 
 //Remeber to

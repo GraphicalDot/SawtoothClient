@@ -93,7 +93,10 @@ async def share_mnemonic_batch_submit(app, requester_address, user_id,
 async def submit_share_mnemonic(app, requester_address, account,
                 secret_share, index, private_key):
 
-
+    ##create a new AES key,
+    ##encypt the share with this AES key
+    ##encrypt this AES key with the public key present on the account of
+    ##the receiver
     acc_signer=create_signer(private_key)
 
 

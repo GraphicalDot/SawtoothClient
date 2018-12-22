@@ -9,16 +9,14 @@ import binascii
 import coloredlogs, logging
 coloredlogs.install()
 
-##NOTE for both these functions "2334" is equivalent to 2334 as message 
+##NOTE for both these functions "2334" is equivalent to 2334 as message
 
 def ecdsa_signature(private_key, message):
     secp_private = Secp256k1PrivateKey.from_hex(private_key)
     if isinstance(message, int):
         message = str(message)
-        print (message)
     if isinstance(message, str):
         message = message.encode()
-        print (message)
     raw_sig = secp_private.secp256k1_private_key.ecdsa_sign(message)
     signature = secp_private.secp256k1_private_key.ecdsa_serialize(raw_sig)
     return binascii.hexlify(signature)

@@ -21,7 +21,6 @@ async def store_share_mnemonics(app, data):
     try:
         return await r.table(app.config.DATABASE["share_mnemonic"])\
             .insert(data).run(app.config.DB)
-        logging.info(data)
 
     except ReqlNonExistenceError as e:
         logging.error(f"Error in inserting {data} which is {e}")
@@ -34,5 +33,28 @@ async def store_share_mnemonics(app, data):
 async def update_shared_secret_array(app, user_id, array):
     return await r.table(app.config.DATABASE["users"])\
             .filter({"user_id": user_id})\
+            .update({"shared_secret": array})\
+            .run(app.config.DB)
+
+
+async def get_shared_secret_array(app, user_id):
+
+    try:
+        cursor= await r.table(app.config.DATABASE["users"])\
+            .filter({"user_id": user_id})\
+            .pluck({"shared_secret"})\
+            .run(app.config.DB)
+
+    except ReqlNonExistenceError as e:
+        logging.error(f"Error in inserting {data} which is {e}")
+        raise ApiBadRequest(
+            f"Error in storing asset {e}")
+
+    return await cursor_to_result(cursor)
+
+
+async def update_reset_key(app, user_id, reset_key, share_secret_address):
+    return await r.table(app.config.DATABASE["users"])\
+            .filter({"user_id": user_id, "share_secret_address": share_secret_address})\
             .update({"shared_secret": array})\
             .run(app.config.DB)
