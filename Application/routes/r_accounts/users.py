@@ -200,7 +200,8 @@ async def share_mnemonic(request, requester):
 
 
     #index = list(nth_keys_data.keys())[0]
-    await share_mnemonic_batch_submit(request.app, requester_address, user_accounts, secret_shares, nth_keys_data)
+    await share_mnemonic_batch_submit(request.app, requester_address, requester["user_id"],
+                user_accounts, secret_shares, nth_keys_data)
 
     """
     async with aiohttp.ClientSession() as session:

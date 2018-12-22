@@ -75,15 +75,6 @@ async def find_on_key(app, key, value):
     return await cursor_to_result(cursor)
 
 
-async def find_on_key(app, key, value):
-    try:
-        cursor = await r.table(app.config.DATABASE["users"])\
-            .filter(r.row[key] == value)\
-            .run(app.config.DB)
-    except Exception as e:
-        return False
-
-    return await cursor_to_result(cursor)
 
 
 
@@ -329,81 +320,3 @@ async def find_user(app, phone_number, email):
             .filter({"email": email, "phone_number": phone_number})\
             .run(app.config.DB)
     return await cursor_to_result(cursor)
-
-
-async def pending_find_on_key(key, value, app):
-    """
-    Find key value pair in pending users table
-    """
-    try:
-        cursor = await r.table(app.config.DATABASE["pending_users_table"])\
-            .filter(r.row[key] == value)\
-            .run(app.config.DB)
-    except Exception as e:
-        return False
-
-    return await cursor_to_result(cursor)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-async def fetch_all_account_resources(conn):
-    return await r.table('accounts')\
-        .filter((fetch_latest_block_num() >= r.row['start_block_num'])
-                & (fetch_latest_block_num() < r.row['end_block_num']))\
-        .map(lambda account: account.merge(
-            {'publicKey': account['public_key']}))\
-        .map(lambda account: account.merge(
-            {'holdings': fetch_holdings(account['holdings'])}))\
-        .map(lambda account: (account['label'] == "").branch(
-            account.without('label'), account))\
-        .map(lambda account: (account['description'] == "").branch(
-            account.without('description'), account))\
-        .without('public_key', 'delta_id',
-                 'start_block_num', 'end_block_num')\
-        .coerce_to('array').run(conn)
-
-
-async def fetch_account_resource(conn, public_key, auth_key):
-    try:
-        return await r.table('accounts')\
-            .get_all(public_key, index='public_key')\
-            .max('start_block_num')\
-            .merge({'publicKey': r.row['public_key']})\
-            .merge({'holdings': fetch_holdings(r.row['holdings'])})\
-            .do(lambda account: (r.expr(auth_key).eq(public_key)).branch(
-                account.merge(_fetch_email(public_key)), account))\
-            .do(lambda account: (account['label'] == "").branch(
-                account.without('label'), account))\
-            .do(lambda account: (account['description'] == "").branch(
-                account.without('description'), account))\
-            .without('public_key', 'delta_id',
-                     'start_block_num', 'end_block_num')\
-            .run(conn)
-    except ReqlNonExistenceError:
-        raise ApiBadRequest(
-            "No account with the public key {} exists".format(public_key))
-
-
-def _fetch_email(public_key):
-    return r.table('auth')\
-        .get_all(public_key, index='public_key')\
-        .pluck('email')\
-        .coerce_to('array')[0]

@@ -17,7 +17,8 @@
 #from .__send_share_mnemonic import __send_share_mnemonic
 #from addressing import addresser
 #from routes import route_utils
-#from encryption.utils import create_signer, encrypt_w_pubkey
+from encryption.utils import create_signer
+#encrypt_w_pubkey
 #from encryption.asymmetric import pub_encrypt
 #from encryption.symmetric import generate_aes_key, aes_encrypt
 #from transactions.extended_batch import  multi_transactions_batch
@@ -34,9 +35,8 @@
 
 async def submit_activate_shares(app, requester_account):
 
-    zero_pub = requester_account["acc_zero_pub"]
 
-    acc_signer=create_signer(private_key)``
+    acc_signer=create_signer(app.config.ADMIN_ZERO_PRIV)
 
 
     ##encrypting the shared mnemonic with users account public key

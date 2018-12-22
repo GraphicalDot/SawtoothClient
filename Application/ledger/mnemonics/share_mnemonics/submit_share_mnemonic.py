@@ -18,7 +18,6 @@ from .__send_share_mnemonic import __send_share_mnemonic
 from addressing import addresser
 from routes import route_utils
 from encryption.utils import create_signer, encrypt_w_pubkey
-from encryption.asymmetric import pub_encrypt
 from encryption.symmetric import generate_aes_key, aes_encrypt
 from transactions.extended_batch import  multi_transactions_batch
 
@@ -27,11 +26,13 @@ import asyncio
 import binascii
 from ledger import messaging
 from errors.errors import ApiBadRequest, ApiInternalError
+from db.share_mnemonic import store_share_mnemonics, update_shared_secret_array
 import coloredlogs, logging
 coloredlogs.install()
 
 
-async def share_mnemonic_batch_submit(app, requester_address, user_accounts, secret_shares, nth_keys_data):
+async def share_mnemonic_batch_submit(app, requester_address, user_id,
+                            user_accounts, secret_shares, nth_keys_data):
     async with aiohttp.ClientSession() as session:
         transactions = await asyncio.gather(*[
               submit_share_mnemonic(app, requester_address,
@@ -42,12 +43,12 @@ async def share_mnemonic_batch_submit(app, requester_address, user_accounts, sec
         ])
 
 
-    logging.info(transactions)
+
+
 
     batch_id, batch_list_bytes = multi_transactions_batch(
                     [e["transaction"] for e in transactions], app.config.SIGNER)
 
-    logging.info(batch_list_bytes)
 
     rest_api_response = await messaging.send(
         batch_list_bytes,
@@ -56,9 +57,34 @@ async def share_mnemonic_batch_submit(app, requester_address, user_accounts, sec
 
     try:
         result = await  messaging.wait_for_status(batch_id, app.config)
+        ##This must be removed in production, since it stores shared_mnemonic
+        new_list = []
+        for transaction in transactions:
+            transaction.update({"batch_id": batch_id, "user_id": user_id})
+            ##removing payload
+            transaction.pop("transaction")
+            new_list.append(transaction)
+            ##For production purpose this code block must be validated
+            #for transaction in transactions:
+            #    transaction.update({"batch_id": batch_id, "user_id": user_id})
+            #   [trasaction.pop(e) for e in "secret_key", "key", "secret_hash"]
+
+        async with aiohttp.ClientSession() as session:
+            await asyncio.gather(*[
+                    store_share_mnemonics(app, trans)
+                    for trans in new_list
+
+
+            ])
+        ##updating shared_secret array of the users present in the database,
+        ##with the ownership key of every transaqction, address of the users
+        ##to whoim these transaction were addressed.
+        await update_shared_secret_array(app, user_id, [_t["ownership"] for _t in new_list])
+
 
     except (ApiBadRequest, ApiInternalError) as err:
         #await auth_query.remove_auth_entry(request.app.config.DB_CONN, request.json.get('email'))
+        logging.error(f"Error in share_mnemonic_batch_submit {err}")
         raise err
         return False, False
 

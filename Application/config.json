@@ -38,7 +38,7 @@
             "otp_email": "otp_email",
             "otp_mobile": "otp_mobile",
             "otp_table": "otp_table",
-            "share_secret": "share_secrets"
+            "share_mnemonic": "share_mnemonics"
               },
 
     "STORAGE":{
