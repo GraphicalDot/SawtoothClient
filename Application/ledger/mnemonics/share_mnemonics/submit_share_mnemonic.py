@@ -108,13 +108,14 @@ async def submit_share_mnemonic(app, requester_address, account,
     #secret_share = binascii.hexlify(encrypted_secret_share)
 
 
-    key = generate_aes_key(16)
+    key = generate_aes_key(16) ##this is in bytes
     ciphertext, tag, nonce = aes_encrypt(key, secret_share)
     ciphertext = b"".join([tag, ciphertext, nonce])
     ##The AES_GCM encrypted file content
     encryptes_secret_share = binascii.hexlify(ciphertext).decode()
 
-    ##Encrypting AES key with the child public key
+    ##Encrypting AES key with the child public key, output will ne hex encoded
+    ##encryted AES key
     encrypted_key = encrypt_w_pubkey(key, account["public"])
 
 

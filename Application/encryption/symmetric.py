@@ -35,8 +35,8 @@ def aes_encrypt(key, file_bytes):
 def aes_decrypt(key, ciphertext):
     if isinstance(ciphertext, str):
         ciphertext = ciphertext.encode()
-    logging.info (f"Secret just before decryption AES <<{ciphertext}>>")
     tag, nonce = ciphertext[:16], ciphertext[-16:]
+
     cipher = AES.new(key, AES.MODE_GCM, nonce)
     decrypted_text = cipher.decrypt_and_verify(ciphertext[16:-16], tag)
     return decrypted_text

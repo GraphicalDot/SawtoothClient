@@ -54,7 +54,7 @@ class ResolveAccount(aobject):
         self.app = app
         self.requester = requester
 
-        if requester["role"] == "CHILD":
+        if self.requester["role"] == "CHILD":
             ##The parent org zeroth public key will be used
             self.org_address, self.org_state, self.org_db = \
                         await self.org_details(requester["parent_zero_pub"])
@@ -66,7 +66,7 @@ class ResolveAccount(aobject):
             self.child_user_id = self.child_db["user_id"]
             self.zero_pub = self.org_state["public"] ##this will be added as a
             ##reference to asset to reflect which org account issues this certificate
-        elif requester["role"] == "USER":
+        elif self.requester["role"] == "USER":
             self.org_address, self.org_state, self.org_db= \
                             await self.user_details(requester["acc_zero_pub"])
             self.child_address, self.child_state = None, None

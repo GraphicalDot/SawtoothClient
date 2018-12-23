@@ -20,7 +20,7 @@ from addressing import addresser
 #from routes import route_utils
 from encryption.utils import create_signer
 
-from db.share_mnemonic import get_shared_secret_array, update_reset_key
+from db.share_mnemonic import get_shared_secret_array, update_share_mnemonic
 
 
 #encrypt_w_pubkey
@@ -93,6 +93,19 @@ async def activate_shares_batch_submit(app, requester_account, password):
 
     ##based on the data fetched from all the share_secret transaction new ACTIVATE_SECRET
     ##transactions will be created
+
+    async with aiohttp.ClientSession() as session:
+            share_secret_transactions= await asyncio.gather(*[
+                deserialize_share_secret(app.config.REST_API_URL, address)
+                     for address in share_secrets_addresses
+        ])
+
+    for transaction in share_secret_transactions:
+        user_state = await deserialize_user(app.config.REST_API_URL, transaction["ownership"])
+        transaction.update({"owner_public": user_state["public"]})
+
+
+
     async with aiohttp.ClientSession() as session:
         transactions = await asyncio.gather(*[
               submit_activate_shares(app, transaction, password)
@@ -126,14 +139,19 @@ async def activate_shares_batch_submit(app, requester_account, password):
             #    transaction.update({"batch_id": batch_id, "user_id": user_id})
             #   [trasaction.pop(e) for e in "secret_key", "key", "secret_hash"]
 
+        logging.info(transaction)
         async with aiohttp.ClientSession() as session:
             db_results = await asyncio.gather(*[
-                    update_reset_key(app, trans["user_id"],
-                                trans["reset_key"], trans["salt"], trans["share_secret_address"])
-                    for trans in new_list
-
+                    update_share_mnemonic(app, trans) for trans in new_list
             ])
+
         logging.info(db_results)
+
+        ##check if the doc in db have been updated or not
+        for _r in db_results:
+            if _r["replaced"] == 0:
+                logging.error("Some how the result not being updated")
+                raise errors.ApiInternalError("Some how the result not being updated")
     except Exception as e:
         logging.error(e)
         raise CustomError(e)
@@ -153,7 +171,7 @@ async def submit_activate_shares(app, transaction, password):
     ##and also the secret stored on shasred address,
     ##now he will encrypt the unencrypted original secret with this new scrypt
     ##key
-    encrypted_key = pub_encrypt(key, transaction["public"])
+    encrypted_key = pub_encrypt(key, transaction["owner_public"])
 
 
 
@@ -189,6 +207,8 @@ async def submit_activate_shares(app, transaction, password):
     [transaction_data.pop(key) for key in ["config", "txn_key", "batch_key"]]
     transaction_data.update({"transaction_id": transaction_id,
                             "transaction": transaction,
-                            "key":binascii.hexlify(key), "salt":  binascii.hexlify(salt)})
+                            "key":binascii.hexlify(key),
+                            "salt":  binascii.hexlify(salt),
+                            })
 
     return transaction_data

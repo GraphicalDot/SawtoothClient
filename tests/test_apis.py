@@ -4,7 +4,7 @@
 import requests
 import rethinkdb as ret
 from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN, GET_OTPS, \
-            FORGOT_PASSWORD, ALL_SHARE_SECRETS
+            FORGOT_PASSWORD, ALL_SHARE_SECRETS, EXECUTE_SHARE_SECRET
 
 from test_miscelleneous import get_headers, receive_asset_data, revoke_time_stamp
 import json
@@ -181,6 +181,18 @@ class AccountApis(aobject):
 
         return requests.get(ALL_SHARE_SECRETS, headers=headers)
 
+
+
+    async def execute_share_secret(self, requester, share_secret_address):
+        headers = get_headers(requester["email"],
+                        requester["password"])
+
+        data = {"shared_secret_address": share_secret_address}
+        return requests.post(EXECUTE_SHARE_SECRET,
+                    data=json.dumps(data),
+                    headers=headers)
+
+
     @staticmethod
     def register_child(requester, child):
         headers = get_headers(requester["email"],
@@ -204,7 +216,7 @@ class AccountApis(aobject):
 
         data = {"email_list": email_list,
                 "total_shares": 4,
-                "minimum_required": 3}
+                "minimum_required": 3, "password": requester["password"]}
         logging.info(headers)
         return requests.post(SHARE_MNEMONIC,
                                 data=json.dumps(data), headers=headers)

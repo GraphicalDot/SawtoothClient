@@ -11,17 +11,19 @@ from routes.route_utils import send_message, revoke_time_stamp, now_time_stamp
 
 import hashlib
 from db import accounts_query
-
+import binascii
 from sanic import response
 from errors import errors
 import db.accounts_query as accounts_db
-from db.share_mnemonic import get_addresses_on_ownership
+from db.share_mnemonic import get_addresses_on_ownership, update_mnemonic_encryption_salt
 import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
 from ledger.accounts.user_account.submit_user_account import submit_user_account
 from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import share_mnemonic_batch_submit
 from ledger.mnemonics.activate_shares.submit_activate_shares import activate_shares_batch_submit
+from ledger.mnemonics.execute_shared_mnemonic.submit_execute_share_mnemonic import submit_execute_share_mnemonic
+
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
 from addressing import addresser, resolve_address
@@ -84,6 +86,9 @@ async def get_address(request):
         raise errors.CustomError("address is required")
 
     instance = await resolve_address.ResolveAddress(address, request.app.config.REST_API_URL)
+
+    if not instance.data:
+        raise errors.ApiInternalError(f"State is not present on the blockchain for {address}")
     return response.json(
             {
             'error': False,
@@ -190,8 +195,53 @@ async def all_share_secrets(request, requester):
             {
             'error': False,
             'success': True,
-            "data": {"floated": floated_result, "received": received_result},
+            "data": {"floated": floated_result, "received": [received_result]},
             })
+
+
+@USERS_BP.post('/execute_shared_secret')
+@authorized()
+async def execute_shared_secret(request, requester):
+    """
+
+    """
+    required_fields = ["shared_secret_address"]
+    validate_fields(required_fields, request.json)
+
+    instance = await resolve_address.ResolveAddress(
+                request.json["shared_secret_address"],
+                    request.app.config.REST_API_URL)
+
+    if instance.type != "SHARE_SECRET":
+        raise errors.ApiInternalError("This address is not SHARE_SECRET contract address")
+    else:
+        logging.info("Instance is SHARE_SECRET")
+
+    address = addresser.user_address(requester["acc_zero_pub"], 0)
+
+    if instance.data["ownership"] != address:
+        raise errors.ApiInternalError("This user doesnt own this SHARE_SECRET contract address")
+    else:
+        logging.info("User owns this SHARE_SECRET")
+
+
+    if not instance.data["active"]:
+        raise errors.ApiInternalError("This SHARE_SECRET contract is not active")
+    else:
+
+        logging.info(f" {instance.data['active']}SHARE_SECRET is active i.e requires execution by the uesr")
+
+    await submit_execute_share_mnemonic(request.app, requester, instance.data)
+    return response.json(
+            {
+            'error': False,
+            'success': True,
+            })
+
+
+
+
+
 
 @USERS_BP.post('/share_mnemonic')
 @authorized()
@@ -201,7 +251,7 @@ async def share_mnemonic(request, requester):
     if they forget their Mnemonic we cant do anything about it
     """
 
-    required_fields = ["email_list", "minimum_required"]
+    required_fields = ["email_list", "minimum_required", "password"]
 
     validate_fields(required_fields, request.json)
 
@@ -245,12 +295,16 @@ async def share_mnemonic(request, requester):
     ##Generate scrypt key from the email and a random salt
     ##encrypt the mnemonic with this AES Key
     ##split the mnemonic
-    aes_encryption_salt, secret_shares = split_secret(requester["email"],
+    aes_encryption_salt, secret_shares = split_secret(request.json["password"],
                         user.decrypted_mnemonic, request.json["minimum_required"],
                         len(request.json["email_list"]))
 
 
 
+    ##upadting user entry in the users table with the salt which was used in
+    ##encrypting mnemonic before it was split into shamir secret shares
+    await update_mnemonic_encryption_salt(request.app, requester["user_id"],
+        binascii.hexlify(aes_encryption_salt).decode())
     #index = list(nth_keys_data.keys())[0]
     await share_mnemonic_batch_submit(request.app, requester_address, requester["user_id"],
                 user_accounts, secret_shares, nth_keys_data)

@@ -53,11 +53,22 @@ async def get_shared_secret_array(app, user_id):
     return await cursor_to_result(cursor)
 
 
-async def update_reset_key(app, user_id, reset_key, salt, share_secret_address):
-    return await r.table(app.config.DATABASE["users"])\
-            .filter({"user_id": user_id, "share_secret_address": share_secret_address})\
-            .update({"reset_key": reset_key, "reset_salt": salt})\
+async def update_share_mnemonic(app, trans):
+    return await r.table(app.config.DATABASE["share_mnemonic"])\
+            .filter({"user_id": trans["user_id"], "shared_secret_address": trans["share_secret_address"]})\
+            .update({"reset_key": trans["reset_key"].decode(),\
+                    "updated_on": trans["timestamp"],
+                    "active": True,
+            "reset_salt": trans["salt"].decode()})\
             .run(app.config.DB)
+
+
+async def update_mnemonic_encryption_salt(app, user_id, mnemonic_encryption_salt):
+    return await r.table(app.config.DATABASE["users"])\
+            .filter({"user_id": user_id})\
+            .update({"org_mnemonic_encryption_salt": mnemonic_encryption_salt})\
+            .run(app.config.DB)
+
 
 
 async def get_addresses_on_ownership(app, owner_account_address):

@@ -46,13 +46,12 @@ message TransactionPayload {
 //The user address will first decrypt the secret and reset key with its public key
 // then ecnrypt the secret with this new reset key
 message CreateExecuteShareSecret {
-    string share_secret_address=1;
-    string reset_key=2;
+    string shared_secret_address=1;
+    string secret=2;
+    string timestamp=7;
     uint32 nonce=3;
     string nonce_hash=4;
     string signed_nonce = 5;
-    string admin_address = 6;
-    string timestamp=7;
 }
 
 
@@ -84,7 +83,7 @@ message CreateShareSecret {
     string reset_key=9;
     string created_on=10;
     string updated_on=11;
-    string executed=12; //Whether this has been executed in the present cycle after it was made active
+    bool executed=12; //Whether this has been executed in the present cycle after it was made active
     string executed_on=13; //The last time the acceptor has executed this contract i.e
                     //encrypted his allotted share with new reset key
     uint32 num_executions=14; //number of times the acceptor has executed this contract
