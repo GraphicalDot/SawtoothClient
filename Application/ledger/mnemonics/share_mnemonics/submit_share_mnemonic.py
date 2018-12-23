@@ -130,15 +130,19 @@ async def submit_share_mnemonic(app, requester_address, account,
                         "secret_hash": hashlib.sha512(secret_share.encode()).hexdigest(),
                         "requester_address": requester_address,
                         "role": "USER",
-                        "idx": index
+                        "idx": index,
+                        "created_on": route_utils.indian_time_stamp()
                         }
 
 
 
     transaction_id, transaction= await __send_share_mnemonic(**transaction_data)
+    shared_secret_address = addresser.shared_secret_address(
+        acc_signer.get_public_key().as_hex(), index)
 
     [transaction_data.pop(key) for key in ["config", "txn_key", "batch_key"]]
     transaction_data.update({"transaction_id": transaction_id,
-                            "transaction": transaction})
+                            "transaction": transaction,
+                            "shared_secret_address": shared_secret_address})
 
     return transaction_data

@@ -20,6 +20,26 @@ import rethinkdb as ret
 
 """
 
+
+def otp_email(requester):
+    try:
+        result = ret.db('remediumdb').table('otp_email').filter({"email": requester["email"]}).run(conn).items[0]["email_otp"]
+        return result
+    except Exception as e:
+        #logging.error(e)
+        return False
+
+
+
+def otp_mobile(requester):
+    try:
+        result = ret.db('remediumdb').table('otp_mobile').filter({"phone_number": requester["phone_number"]}).run(conn).items[0]["mobile_otp"]
+        return result
+    except Exception as e:
+        #logging.error(e)
+        return False
+
+
 def db_find_on_key(email):
     try:
         result = ret.table("users").filter(ret.row["email"]==email).run(conn).items[0]
@@ -68,6 +88,30 @@ async def boilerplate_share_mnemonic(user, email_list):
     else:
         logging.error(f"response is <{response.json()}> and error code {response.status_code}")
 
+
+async def boilerplate_activate_mnemonic(user):
+    instance = await AccountApis()
+    response = await instance.get_otps(user)
+    assert_equals(response.status_code, 200)
+    _otp_email = otp_email(user)
+    _otp_mobile = otp_mobile(user)
+
+    logging.info(_otp_email)
+    logging.info(_otp_mobile)
+
+    f_response = await instance.forgot_password(user, _otp_email, _otp_mobile)
+    logging.info(f_response)
+
+
+
+
+async def boilerplate_execute_share_mnemonic(user):
+    ##Since shasred_secret addresses has been floated by our main user1, to several
+    ##other users like user2, user3, user4,. and user5
+
+    ##THe above function boilerplate_activate_mnemonic floats another ind of smart
+    ##contact called as 
+
 # Define a coroutine that takes in a future
 
 # Spin up a quick and simple event loop
@@ -88,10 +132,16 @@ async def test_share_mnemonic():
     await boilerplate_share_mnemonic(user1, [user2["email"], user3["email"], user4["email"], user5["email"]])
 
 
+async def test_activate_mnemonic():
+    await boilerplate_activate_mnemonic(user1)
+
+
+
 try:
     #asyncio.ensure_future(test_register_users())
     loop.run_until_complete(test_register_users())
-    loop.run_until_complete(test_share_mnemonic())
+    #loop.run_until_complete(test_share_mnemonic())
+    loop.run_until_complete(test_activate_mnemonic())
 
 finally:
     loop.close()

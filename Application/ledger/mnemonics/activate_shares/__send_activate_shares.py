@@ -27,7 +27,8 @@ async def __send_activate_shares(**in_data):
         nonce=in_data["nonce"],
         nonce_hash=in_data["nonce_hash"],
         signed_nonce=in_data["signed_nonce"],
-        admin_address=in_data["admin_address"]
+        admin_address=in_data["admin_address"],
+        timestamp=in_data["timestamp"]
             )
 
     logging.info(payload)

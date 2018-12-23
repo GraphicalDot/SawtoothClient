@@ -29,7 +29,7 @@ from encryption.asymmetric import pub_encrypt
 from encryption.key_derivations import generate_scrypt_key
 from encryption.signatures import ecdsa_signature
 from transactions.extended_batch import  multi_transactions_batch
-
+from routes.route_utils import indian_time_stamp
 import aiohttp
 import asyncio
 import binascii
@@ -117,7 +117,7 @@ async def activate_shares_batch_submit(app, requester_account, password):
 
         new_list = []
         for transaction in transactions:
-            transaction.update({"batch_id": batch_id, "user_id": user_id})
+            transaction.update({"batch_id": batch_id, "user_id": requester_account["user_id"]})
             ##removing payload
             transaction.pop("transaction")
             new_list.append(transaction)
@@ -128,7 +128,7 @@ async def activate_shares_batch_submit(app, requester_account, password):
 
         async with aiohttp.ClientSession() as session:
             db_results = await asyncio.gather(*[
-                    update_reset_key(app, requester_account["user_id"],
+                    update_reset_key(app, trans["user_id"],
                                 trans["reset_key"], trans["share_secret_address"])
                     for trans in new_list
 
@@ -178,6 +178,7 @@ async def submit_activate_shares(app, transaction, password):
                         "nonce_hash": nonce_hash,
                         "signed_nonce": signed_nonce,
                         "admin_address": admin_address,
+                        "timestamp": indian_time_stamp()
                         }
 
 

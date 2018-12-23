@@ -33,10 +33,10 @@ class aobject(object):
         pass
 
 
-
 class ResolveAccount(aobject):
 
     async def __init__(self, requester, app):
+
         """
         decrypted_nemonic will be mnemonic for either parent org of child
         or org itself, child mnemonic has no use as of now

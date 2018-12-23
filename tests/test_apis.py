@@ -3,7 +3,7 @@
 
 import requests
 import rethinkdb as ret
-from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN
+from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN, GET_OTPS, FORGOT_PASSWORD
 
 from test_miscelleneous import get_headers, receive_asset_data, revoke_time_stamp
 import json
@@ -119,7 +119,24 @@ class AssetApis(object):
         headers=headers)
 
 """
-class AccountApis(object):
+
+
+class aobject(object):
+    """Inheriting this class allows you to define an async __init__.
+
+    So you can create objects by doing something like `await MyClass(params)`
+    """
+    async def __new__(cls, *a, **kw):
+        instance = super().__new__(cls)
+        await instance.__init__(*a, **kw)
+        return instance
+
+    async def __init__(self):
+        pass
+
+class AccountApis(aobject):
+    async def __init__(self):
+        pass
 
     @staticmethod
     def register_organization(requester, organization):
@@ -138,8 +155,23 @@ class AccountApis(object):
             return False
 
 
+    async def get_otps(self, requester):
+
+        return requests.post(GET_OTPS,
+                data=json.dumps({"email": requester["email"],
+                        "phone_number": requester["phone_number"]}))
 
 
+
+
+    async def forgot_password(self, requester, otp_email, otp_mobile):
+
+        return requests.post(FORGOT_PASSWORD,
+                data=json.dumps({"email": requester["email"],
+                        "phone_number": requester["phone_number"],
+                        "otp_email": otp_email,
+                        "otp_mobile": otp_mobile,
+                        "new_password": requester["new_password"]}))
     @staticmethod
     def register_child(requester, child):
         headers = get_headers(requester["email"],

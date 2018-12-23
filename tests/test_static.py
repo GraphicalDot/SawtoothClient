@@ -15,7 +15,8 @@ user1 = {'first_name': 'Saurav',
  'email': 'houzier.saurav@gmail.com',
  'phone_number': '9315048070',
  'password': '84Ll*qtG)p',
- 'pancard': '978-1-949144-33-8'}
+ 'pancard': '978-1-949144-33-8',
+ 'new_password': 'PA#DDEdQ@2'}
 
 
 user2 = {'first_name': 'William',
@@ -85,3 +86,5 @@ USER_REGISTRATION = f"{REST_API_URL}/accounts/users/registration"
 
 SHARE_MNEMONIC = f"{REST_API_URL}/accounts/users/share_mnemonic"
 LOGIN = f"{REST_API_URL}/accounts/login"
+GET_OTPS = f"{REST_API_URL}/accounts/users/get_otps"
+FORGOT_PASSWORD = f"{REST_API_URL}/accounts/users/forgot_password"

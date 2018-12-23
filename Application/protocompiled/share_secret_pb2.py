@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='share_secret.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\x12share_secret.proto\"\x85\x01\n\x0bShareSecret\x12\x0e\n\x06secret\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x02 \x01(\x08\x12\x11\n\townership\x18\x03 \x01(\t\x12\x13\n\x0bsecret_hash\x18\x04 \x01(\t\x12\x0b\n\x03key\x18\x05 \x01(\t\x12\x11\n\treset_key\x18\x06 \x01(\t\x12\x0e\n\x06public\x18\x07 \x01(\tb\x06proto3')
+  serialized_pb=_b('\n\x12share_secret.proto\"\xba\x01\n\x0bShareSecret\x12\x0e\n\x06secret\x18\x01 \x01(\t\x12\x0e\n\x06\x61\x63tive\x18\x02 \x01(\x08\x12\x11\n\townership\x18\x03 \x01(\t\x12\x13\n\x0bsecret_hash\x18\x04 \x01(\t\x12\x0b\n\x03key\x18\x05 \x01(\t\x12\x11\n\treset_key\x18\x06 \x01(\t\x12\x0e\n\x06public\x18\x07 \x01(\t\x12\x12\n\ncreated_on\x18\x08 \x01(\t\x12\x0b\n\x03idx\x18\t \x01(\r\x12\x12\n\nupdated_on\x18\n \x01(\tb\x06proto3')
 )
 
 
@@ -81,6 +81,27 @@ _SHARESECRET = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='created_on', full_name='ShareSecret.created_on', index=7,
+      number=8, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='idx', full_name='ShareSecret.idx', index=8,
+      number=9, type=13, cpp_type=3, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='updated_on', full_name='ShareSecret.updated_on', index=9,
+      number=10, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -94,7 +115,7 @@ _SHARESECRET = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=23,
-  serialized_end=156,
+  serialized_end=209,
 )
 
 DESCRIPTOR.message_types_by_name['ShareSecret'] = _SHARESECRET

@@ -56,5 +56,5 @@ async def get_shared_secret_array(app, user_id):
 async def update_reset_key(app, user_id, reset_key, share_secret_address):
     return await r.table(app.config.DATABASE["users"])\
             .filter({"user_id": user_id, "share_secret_address": share_secret_address})\
-            .update({"shared_secret": array})\
+            .update({"reset_key": reset_key})\
             .run(app.config.DB)

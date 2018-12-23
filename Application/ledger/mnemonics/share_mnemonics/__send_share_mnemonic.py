@@ -37,7 +37,8 @@ async def __send_share_mnemonic(**in_data):
             key=in_data["key"],
             role=in_data["role"],
             idx=in_data["idx"],
-            user_address= in_data["requester_address"] #the user address who is sharing the mnemonic
+            user_address= in_data["requester_address"], #the user address who is sharing the mnemonic
+            created_on= in_data["created_on"],
             )
 
     logging.info(payload)
