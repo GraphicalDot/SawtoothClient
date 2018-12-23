@@ -58,3 +58,22 @@ async def update_reset_key(app, user_id, reset_key, salt, share_secret_address):
             .filter({"user_id": user_id, "share_secret_address": share_secret_address})\
             .update({"reset_key": reset_key, "reset_salt": salt})\
             .run(app.config.DB)
+
+
+async def get_addresses_on_ownership(app, owner_account_address):
+    #fetch shared_secret contracts on the basis of the ownerhsip
+    ##since the originla user floats a smart contract to different users directing
+    ##to their account addresses, this function will fecth these share_secret contract
+    ##for toher users who want to update this shared_secret address with the reset_key
+
+    try:
+        cursor= await r.table(app.config.DATABASE["share_mnemonic"])\
+            .filter({"ownership": owner_account_address})\
+            .run(app.config.DB)
+
+    except ReqlNonExistenceError as e:
+        logging.error(f"Error in inserting {data} which is {e}")
+        raise ApiBadRequest(
+            f"Error in storing asset {e}")
+
+    return await cursor_to_result(cursor)

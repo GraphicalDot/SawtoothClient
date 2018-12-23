@@ -15,6 +15,7 @@ from db import accounts_query
 from sanic import response
 from errors import errors
 import db.accounts_query as accounts_db
+from db.share_mnemonic import get_addresses_on_ownership
 import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
@@ -181,6 +182,7 @@ async def all_share_secrets(request, requester):
                     for address in floated
             ])
 
+    received_result =await get_addresses_on_ownership(request.app, address)
 
 
 
@@ -188,7 +190,7 @@ async def all_share_secrets(request, requester):
             {
             'error': False,
             'success': True,
-            "data": {"floated": floated_result, "received": None},
+            "data": {"floated": floated_result, "received": received_result},
             })
 
 @USERS_BP.post('/share_mnemonic')

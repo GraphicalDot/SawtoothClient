@@ -151,7 +151,7 @@ async def test_activate_mnemonic():
 
 
 async def test_execute_share_mnemonic():
-    await boilerplate_execute_share_mnemonic(user1)
+    await boilerplate_execute_share_mnemonic(user2)
 
 
 try:
