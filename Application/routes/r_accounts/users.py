@@ -142,6 +142,55 @@ async def get_mnemonic(request):
     pass
 
 
+
+@USERS_BP.get('/all_share_secrets')
+@authorized()
+async def all_share_secrets(request, requester):
+    """
+
+    Result will have two keys,
+    floated and received,
+    floated will have all the shared_secret addresses that this user have floated
+    and have his encryptes mnemonic distribution
+
+    the received is all the shared_Secret_addresses that have shared with him,
+    This information can only be pulled from database right now but
+    sawtooth events will be used later
+    """
+
+    if requester["role"] == "USER":
+        address = addresser.user_address(requester["acc_zero_pub"], 0)
+        account = await deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
+
+    else:
+        logging.error("Not implemented yet")
+        raise errors.ApiInternalError("This functionality is not implemented yet")
+
+
+
+    logging.info(account)
+    floated = account.get("shared_secret")
+    floated_result = []
+    if floated:
+        #implies that user has already have created shared_secrets contracts and
+        ##this array have the addresses of the shared_secrets
+        async with aiohttp.ClientSession() as session:
+            floated_result= await asyncio.gather(*[
+                deserialize_state.deserialize_share_secret(
+                        request.app.config.REST_API_URL, address)
+                    for address in floated
+            ])
+
+
+
+
+    return response.json(
+            {
+            'error': False,
+            'success': True,
+            "data": {"floated": floated_result, "received": None},
+            })
+
 @USERS_BP.post('/share_mnemonic')
 @authorized()
 async def share_mnemonic(request, requester):

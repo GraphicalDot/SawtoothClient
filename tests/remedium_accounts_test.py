@@ -109,8 +109,21 @@ async def boilerplate_execute_share_mnemonic(user):
     ##Since shasred_secret addresses has been floated by our main user1, to several
     ##other users like user2, user3, user4,. and user5
 
-    ##THe above function boilerplate_activate_mnemonic floats another ind of smart
-    ##contact called as 
+    ##THe above function boilerplate_activate_mnemonic floats another kind of smart
+    ##contact called as activate_shares, which then creates new scrypt keys with different salts
+    ##these salts are stored only in the database, the forgot_pasword api then updates every
+    ##shared_secret array of its account, with new reset keys and set active flag of every
+    ##sharet_secret contract to True,
+
+    ##now users 2, 3, 4, 5, will loginto their account fetch shared_Secret conracts shared with them
+    ## decrypt reset_key and secret share with their public key and then encrypts shared_secret
+    ##with the new reset_key and stored it into secret_share again
+
+    ##first we need to get what all share secrets have been shared with him
+    instance = await AccountApis()
+    response = await instance.all_share_secrets(user)
+    logging.info(json.dumps(response.json()["data"], indent=10))
+
 
 # Define a coroutine that takes in a future
 
@@ -137,11 +150,17 @@ async def test_activate_mnemonic():
 
 
 
+async def test_execute_share_mnemonic():
+    await boilerplate_execute_share_mnemonic(user1)
+
+
 try:
     #asyncio.ensure_future(test_register_users())
     loop.run_until_complete(test_register_users())
     #loop.run_until_complete(test_share_mnemonic())
-    loop.run_until_complete(test_activate_mnemonic())
+    #loop.run_until_complete(test_activate_mnemonic())
+    loop.run_until_complete(test_execute_share_mnemonic())
+
 
 finally:
     loop.close()

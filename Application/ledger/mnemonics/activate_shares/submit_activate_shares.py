@@ -129,7 +129,7 @@ async def activate_shares_batch_submit(app, requester_account, password):
         async with aiohttp.ClientSession() as session:
             db_results = await asyncio.gather(*[
                     update_reset_key(app, trans["user_id"],
-                                trans["reset_key"], trans["share_secret_address"])
+                                trans["reset_key"], trans["salt"], trans["share_secret_address"])
                     for trans in new_list
 
             ])

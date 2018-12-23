@@ -3,7 +3,8 @@
 
 import requests
 import rethinkdb as ret
-from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN, GET_OTPS, FORGOT_PASSWORD
+from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN, GET_OTPS, \
+            FORGOT_PASSWORD, ALL_SHARE_SECRETS
 
 from test_miscelleneous import get_headers, receive_asset_data, revoke_time_stamp
 import json
@@ -172,6 +173,14 @@ class AccountApis(aobject):
                         "otp_email": otp_email,
                         "otp_mobile": otp_mobile,
                         "new_password": requester["new_password"]}))
+
+
+    async def all_share_secrets(self, requester):
+        headers = get_headers(requester["email"],
+                        requester["password"])
+
+        return requests.get(ALL_SHARE_SECRETS, headers=headers)
+
     @staticmethod
     def register_child(requester, child):
         headers = get_headers(requester["email"],

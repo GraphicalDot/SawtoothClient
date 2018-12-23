@@ -87,4 +87,6 @@ USER_REGISTRATION = f"{REST_API_URL}/accounts/users/registration"
 SHARE_MNEMONIC = f"{REST_API_URL}/accounts/users/share_mnemonic"
 LOGIN = f"{REST_API_URL}/accounts/login"
 GET_OTPS = f"{REST_API_URL}/accounts/users/get_otps"
+
 FORGOT_PASSWORD = f"{REST_API_URL}/accounts/users/forgot_password"
+ALL_SHARE_SECRETS = f"{REST_API_URL}/accounts/users/all_share_secrets"
