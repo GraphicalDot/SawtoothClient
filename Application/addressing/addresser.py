@@ -99,7 +99,6 @@ def address_is(address):
     elif _contains(infix, TransferAssetSpace):
         result = AddressSpace.TRANSFER_ASSET
 
-
     else:
         result = AddressSpace.OTHER_FAMILY
 

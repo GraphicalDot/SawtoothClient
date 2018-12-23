@@ -23,7 +23,7 @@ from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import share_mnemoni
 from ledger.mnemonics.activate_shares.submit_activate_shares import activate_shares_batch_submit
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
-from addressing import addresser
+from addressing import addresser, resolve_address
 from encryption import utils as encryption_utils
 from addressing import addresser
 from encryption import asymmetric
@@ -82,7 +82,7 @@ async def get_address(request):
     if not address:
         raise errors.CustomError("address is required")
 
-    instance = await SolveAddress(address, request.app.config.REST_API_URL)
+    instance = await resolve_address.ResolveAddress(address, request.app.config.REST_API_URL)
     return response.json(
             {
             'error': False,

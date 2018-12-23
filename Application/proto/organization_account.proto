@@ -19,4 +19,5 @@ message OrganizationAccount {
     repeated uint32	share_asset_idxs=14;
     repeated uint32	receive_asset_idxs=15;
     string public=16;
+    string user_id =17;
 }

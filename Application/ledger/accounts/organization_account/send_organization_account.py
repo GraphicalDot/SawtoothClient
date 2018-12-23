@@ -38,7 +38,6 @@ async def __send_organization_account(**in_data):
 
     account = payload_pb2.CreateOrganizationAccount(
             role = in_data["role"],
-            parent_role=in_data["parent_role"],
             phone_number = in_data["phone_number"],
             pancard = in_data["pancard"],
             user_id=in_data["user_id"],
@@ -48,14 +47,9 @@ async def __send_organization_account(**in_data):
             tan_number=in_data["tan_number"],
             time=in_data["time"],
             indian_time=in_data["indian_time"],
-            parent_zero_pub=in_data["parent_zero_pub"],
             deactivate=in_data["deactivate"],
             deactivate_on=in_data["deactivate_on"],
             create_asset_idxs=in_data["create_asset_idxs"],
-            parent_pub=in_data["parent_pub"],
-            parent_idx=in_data["parent_idx"],
-            float_account_address=in_data["float_account_address"],
-
             )
 
     logging.info(account)

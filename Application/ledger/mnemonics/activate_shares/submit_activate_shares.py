@@ -168,7 +168,7 @@ async def submit_activate_shares(app, transaction, password):
     ##ON the processor side, signed_nonce will be checked against admin account
     ##public key
 
-    admin_address = addresser.user_address(app.config.ADMIN_ZERO_PUB, 0)
+    admin_address = addresser.organization_address(app.config.ADMIN_ZERO_PUB, 0)
     transaction_data= {"config": app.config,
                         "txn_key": acc_signer,
                         "batch_key": app.config.SIGNER,

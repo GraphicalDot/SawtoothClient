@@ -49,15 +49,10 @@ async def submit_admin_account(app, user):
                         "email": user["email"],
                         "time": int(time.time()),
                         "indian_time": route_utils.indian_time_stamp(),
-                        "parent_zero_pub": None,
-                        "parent_role": None,
                         "role": user["role"],
                         "create_asset_idxs": [],
                         "deactivate": False,
                         "deactivate_on": None,
-                        "parent_pub": None,
-                        "parent_idx": None,
-                        "float_account_address": None,
                         }
 
 
