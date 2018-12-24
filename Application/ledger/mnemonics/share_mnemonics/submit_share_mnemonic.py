@@ -32,7 +32,7 @@ import coloredlogs, logging
 coloredlogs.install()
 from protocompiled import payload_pb2
 
-
+from ledger.send_transaction import SendTransactions
 async def share_mnemonic_batch_submit(app, requester_address, user_id,
                             user_accounts, secret_shares, nth_keys_data):
     """
@@ -70,17 +70,15 @@ async def share_mnemonic_batch_submit(app, requester_address, user_id,
 
 
 
-    batch_id, batch_list_bytes = multi_transactions_batch(
+    batch_id, batch_bytes = multi_transactions_batch(
                     [e["transaction"] for e in transactions], app.config.SIGNER)
 
 
-    rest_api_response = await messaging.send(
-        batch_list_bytes,
-        app.config)
 
+    instance = SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
+    instance.push_n_wait(batch_bytes)
 
     try:
-        result = await  messaging.wait_for_status(batch_id, app.config)
         ##This must be removed in production, since it stores shared_mnemonic
         new_list = []
         for transaction in transactions:
@@ -159,10 +157,7 @@ async def submit_share_mnemonic(app, requester_address, account,
     nonce_hash= hashlib.sha512(str(nonce).encode()).hexdigest()
 
 
-    transaction_data= {"config": app.config,
-                        "txn_key": acc_signer,
-                        "batch_key": app.config.SIGNER,
-                        "ownership": account["address"],
+    transaction_data= {"ownership": account["address"],
                         "active": False,
                         "secret": encryptes_secret_share,
                         "key": encrypted_key,
@@ -177,42 +172,21 @@ async def submit_share_mnemonic(app, requester_address, account,
                         }
 
 
-    inputs = [in_data["requester_address"],
-                addresser.shared_secret_address(
-                    in_data["txn_key"].get_public_key().as_hex(), in_data["idx"])
-                ]
-    outputs = [in_data["requester_address"],
-            addresser.shared_secret_address(
-                in_data["txn_key"].get_public_key().as_hex(), in_data["idx"])
+    shared_secret_address = addresser.shared_secret_address(
+        acc_signer.get_public_key().as_hex(), index)
 
+    ##both the inputs and outputs addresses will be the same 
+    addresses = [in_data["requester_address"],
+                shared_secret_address
                 ]
 
-    payload = payload_pb2.CreateShareSecret(
-            secret = encryptes_secret_share,
-            active = False,
-            ownership = account["address"],
-            secret_hash= hashlib.sha512(secret_share.encode()).hexdigest(),,
-            key=encrypted_key,,
-            role= "USER",
-            idx=index,
-            created_on=  route_utils.indian_time_stamp(),
-            nonce=nonce,
-            signed_nonce=signed_nonce,
-            nonce_hash=nonce_hash
-            )
-
-
+    payload = payload_pb2.CreateShareSecret(**transaction_data)
 
     instance = SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
     transaction_id, transaction = instance.share_mnemonic_transaction(
                             txn_key=acc_signer, batch_key=app.config.SIGNER,
-                            inputs=inputs, outputs=outputs, payload=payload)
+                            inputs=addresses, outputs=addresses, payload=payload)
 
-    transaction_id, transaction= await __send_share_mnemonic(**transaction_data)
-    shared_secret_address = addresser.shared_secret_address(
-        acc_signer.get_public_key().as_hex(), index)
-
-    [transaction_data.pop(key) for key in ["config", "txn_key", "batch_key"]]
     transaction_data.update({"transaction_id": transaction_id,
                             "transaction": transaction,
                             "shared_secret_address": shared_secret_address})

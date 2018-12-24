@@ -10,20 +10,7 @@ from protocompiled import payload_pb2
 from transactions.extended_batch import make_header_and_batch
 
 from asyncinit import asyncinit
-
-class aobject(object):
-    """Inheriting this class allows you to define an async __init__.
-
-    So you can create objects by doing something like `await MyClass(params)`
-    """
-    async def __new__(cls, *a, **kw):
-        instance = super().__new__(cls)
-        await instance.__init__(*a, **kw)
-        return instance
-
-    async def __init__(self):
-        pass
-
+from ledger_batch import make_header_and_transaction, make_header_and_batch
 
 
 
@@ -111,8 +98,8 @@ class SendTransactions(aobject):
 
     def multiple_transactions_batch(self, transactions, batch_key):
 
-        batch_bytes, batch_id = transactions_batch(transactions, batch_key)
-        return batch_bytes, batch_id
+        batch_id, batch_bytes = transactions_batch(transactions, batch_key)
+        return batch_id, batch_bytes
 
     async def execute_mnemonic_transaction(self, txn_key=False, batch_key=False,
                                     inputs=False, outputs=False, payload=False):
@@ -137,7 +124,9 @@ class SendTransactions(aobject):
                                                     batch_key=batch_key)
 
         batch_bytes, batch_id = transactions_batch([transaction], batch_key)
+        return await self.push_n_wait(batch_bytes)
 
+    async def push_n_wait(self, batch_bytes):
         rest_api_response = await self.push_transaction(batch_bytes)
         logging.info(f"push transaction result is {data}")
         if not await self.wait_for_status(batch_id):
