@@ -9,7 +9,20 @@ import binascii
 from routes.resolve_account import ResolveAccount
 coloredlogs.install()
 
-def split_secret(email, mnemonic, minimum_required, total_shares):
+def split_mnemonic(email, mnemonic, minimum_required, total_shares):
+    """
+    Derive an Scrypt key with the user's email with salt, this should be secure
+    as email's are unique
+
+    Now the key which is being generated, must be used to encrypt the mnemonic,
+    this encrypted ciphertext must be appended with the tag and nonce,
+    ciphertext must be hex encoded and then must be split into different shares
+
+    Output:
+        salt: bytes
+        shares: list of str 
+
+    """
     keys, salt = key_derivations.generate_scrypt_key(
                                     email, 1, salt=None)
 

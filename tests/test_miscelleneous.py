@@ -1,5 +1,6 @@
 
 
+from test_static import LOGIN
 
 from faker import Faker
 import hashlib
@@ -13,7 +14,6 @@ import requests
 import json
 import uuid
 import coloredlogs, logging
-from test_static import LOGIN
 coloredlogs.install()
 
 

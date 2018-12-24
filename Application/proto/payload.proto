@@ -79,7 +79,6 @@ message CreateShareSecret {
     string key=5;
     string role=6;
     uint32 idx=7;
-    string user_address=8;
     string reset_key=9;
     string created_on=10;
     string updated_on=11;
@@ -88,6 +87,9 @@ message CreateShareSecret {
                     //encrypted his allotted share with new reset key
     uint32 num_executions=14; //number of times the acceptor has executed this contract
     uint32 num_recoveries=15; //number of times the user has receovered his/her mnemonic
+    uint32 nonce=16;
+    string nonce_hash=17;
+    string signed_nonce=18
 }
 
 
@@ -107,7 +109,7 @@ message CreateUserAccount {
     repeated uint32 create_asset_idxs = 13 [packed=true];
     repeated uint32 share_asset_idxs = 14 [packed=true];
     repeated uint32 child_account_idxs = 15 [packed=true];
-    repeated string shared_secret = 16;
+    repeated string share_mnemonic_addresses = 16;
     repeated _Signatures authenticity_signatures= 17;
 
 }

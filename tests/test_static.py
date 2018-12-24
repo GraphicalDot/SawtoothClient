@@ -1,6 +1,6 @@
 
 import rethinkdb as ret
-admin_password = 'e0ba805d-fddb-46f5-92fe-16e8743e0148'
+admin_password = '32d10aa2-13d9-593d-9f4b-ccc871d493b5'
 admin_mnemonic = "laugh crumble meat good call muffin spare gather home clog attend clever wait deliver clinic vivid alcohol bottom elder into mosquito sock wealth violin"
 
 

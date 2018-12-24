@@ -35,7 +35,7 @@ from encryption import signatures
 import aiohttp
 import asyncio
 import datetime
-from ledger.split_secret import split_secret, combine_secret
+from encryption.split_secret import split_secret, combine_secret
 from ledger import deserialize_state
 from routes.resolve_account import ResolveAccount
 from ledger import deserialize_state
@@ -289,13 +289,14 @@ async def share_mnemonic(request, requester):
 
     ##On the basis of the length of user_accounts, generate random indexes
     ## from the mnemonic and get the PUBlic/private keys corresponding to these
-    ##indxs
+    ##indxs, these, these addresses will be appended to the
     nth_keys_data = await user.generate_shared_secret_addr(len(user_accounts))
 
     ##Generate scrypt key from the email and a random salt
     ##encrypt the mnemonic with this AES Key
-    ##split the mnemonic
-    aes_encryption_salt, secret_shares = split_secret(request.json["password"],
+    ##split the mnemonic, this way even if the user forgets its password, it can be
+    ##decrypted using just his email
+    aes_encryption_salt, secret_shares = split_secret(request.json["email"],
                         user.decrypted_mnemonic, request.json["minimum_required"],
                         len(request.json["email_list"]))
 

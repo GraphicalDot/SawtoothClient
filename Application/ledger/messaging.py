@@ -21,6 +21,9 @@ from errors.errors import ApiInternalError
 import aiohttp
 import asyncio
 import time
+from transactions.extended_batch import make_header_and_batch as extended_
+
+
 import coloredlogs, logging
 coloredlogs.install()
 

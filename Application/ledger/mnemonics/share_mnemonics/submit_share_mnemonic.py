@@ -26,13 +26,37 @@ import asyncio
 import binascii
 from ledger import messaging
 from errors.errors import ApiBadRequest, ApiInternalError
+from encryption.signatures import ecdsa_signature
 from db.share_mnemonic import store_share_mnemonics, update_shared_secret_array
 import coloredlogs, logging
 coloredlogs.install()
+from protocompiled import payload_pb2
 
 
 async def share_mnemonic_batch_submit(app, requester_address, user_id,
                             user_accounts, secret_shares, nth_keys_data):
+    """
+    Args:
+        requester_address(str): The user who is sharing his Mnemonic
+        user_id(str): user_id of the user who is sharing the Menmonic
+        user_accounts(list of dictionaies): The user accounts present on the
+                            the blockchain with whom the user wants to share the mnemonic
+
+        secret_shares(list of str): encrypted mnemonic shamir secret shares
+        mth_keys_data(dict with keys as random indexes): The Pub/Priv key pairs
+                    generated from the random indexes generated from the user mnemonic
+                    who wants to share his/her mnemonic, the pub/priv keys are ecc keys
+                    fetched from go_api
+
+    All the trasactions will be packaged into a batch and then will be sumitted to the ledger,
+    If one transaction fails, All transaction will fail as per the property
+    of hyperledger sawtooth
+
+    Output:
+        True if all the trasactions in a batch will be submitted
+        False if there is any error
+
+    """
     async with aiohttp.ClientSession() as session:
         transactions = await asyncio.gather(*[
               submit_share_mnemonic(app, requester_address,
@@ -80,23 +104,34 @@ async def share_mnemonic_batch_submit(app, requester_address, user_id,
         ##with the ownership key of every transaqction, address of the users
         ##to whoim these transaction were addressed.
         await update_shared_secret_array(app, user_id, [_t["ownership"] for _t in new_list])
-
+        return True
 
     except (ApiBadRequest, ApiInternalError) as err:
         #await auth_query.remove_auth_entry(request.app.config.DB_CONN, request.json.get('email'))
         logging.error(f"Error in share_mnemonic_batch_submit {err}")
         raise err
-        return False, False
+        return False
+    return
 
 
 
 async def submit_share_mnemonic(app, requester_address, account,
                 secret_share, index, private_key):
 
-    ##create a new AES key,
-    ##encypt the share with this AES key
-    ##encrypt this AES key with the public key present on the account of
-    ##the receiver
+    """
+    Args:
+        requester_address(str): The user who wants to share the mnemonic
+        account(dict): The blockchain state of the user to whom this user wants to
+                share the mnemonic
+        secret_share (str): One share of the encrypted mnemonic of the user out of many
+            others which will be shared with the user represented by account.
+        index(int): ranom index generated from the user mnemonic at which a new
+            shared_mnemonic address will be generated at which this share of the mnemonic
+            will be stored after encrypting it with a random AES key and encrypting AES
+            key with the public key of the user represented but the account.
+        private_key(str): private key of the requested generated from its mnemonic
+            present at the index.
+    """
     acc_signer=create_signer(private_key)
 
 
@@ -118,7 +153,10 @@ async def submit_share_mnemonic(app, requester_address, account,
     ##encryted AES key
     encrypted_key = encrypt_w_pubkey(key, account["public"])
 
-
+    nonce = random.randint(2**20, 2**30)
+    ##nonce signed by zerothprivate key and in hex format
+    signed_nonce = ecdsa_signature(private_key, nonce)
+    nonce_hash= hashlib.sha512(str(nonce).encode()).hexdigest()
 
 
     transaction_data= {"config": app.config,
@@ -133,9 +171,42 @@ async def submit_share_mnemonic(app, requester_address, account,
                         "role": "USER",
                         "idx": index,
                         "created_on": route_utils.indian_time_stamp()
+                        "nonce": nonce,
+                        "signed_nonce": signed_nonce,
+                        "nonce_hash": nonce_hash
                         }
 
 
+    inputs = [in_data["requester_address"],
+                addresser.shared_secret_address(
+                    in_data["txn_key"].get_public_key().as_hex(), in_data["idx"])
+                ]
+    outputs = [in_data["requester_address"],
+            addresser.shared_secret_address(
+                in_data["txn_key"].get_public_key().as_hex(), in_data["idx"])
+
+                ]
+
+    payload = payload_pb2.CreateShareSecret(
+            secret = encryptes_secret_share,
+            active = False,
+            ownership = account["address"],
+            secret_hash= hashlib.sha512(secret_share.encode()).hexdigest(),,
+            key=encrypted_key,,
+            role= "USER",
+            idx=index,
+            created_on=  route_utils.indian_time_stamp(),
+            nonce=nonce,
+            signed_nonce=signed_nonce,
+            nonce_hash=nonce_hash
+            )
+
+
+
+    instance = SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
+    transaction_id, transaction = instance.share_mnemonic_transaction(
+                            txn_key=acc_signer, batch_key=app.config.SIGNER,
+                            inputs=inputs, outputs=outputs, payload=payload)
 
     transaction_id, transaction= await __send_share_mnemonic(**transaction_data)
     shared_secret_address = addresser.shared_secret_address(
@@ -147,3 +218,6 @@ async def submit_share_mnemonic(app, requester_address, account,
                             "shared_secret_address": shared_secret_address})
 
     return transaction_data
+
+
+async def share_mnemonic_db():
