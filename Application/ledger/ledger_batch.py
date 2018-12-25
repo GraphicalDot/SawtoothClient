@@ -76,6 +76,7 @@ def make_header_and_transaction(payload, inputs, outputs, txn_key, batch_key,
         signer_pubkey=txn_key.get_public_key().as_hex(),
         batcher_pubkey=batch_key.get_public_key().as_hex(),
         dependencies=dependencies)
+    logging.info(header)
 
     return prepare_transaction(
         txn_key=txn_key,

@@ -10,12 +10,14 @@ from protocompiled import payload_pb2
 from transactions.extended_batch import make_header_and_batch
 
 from asyncinit import asyncinit
-from ledger_batch import make_header_and_transaction, make_header_and_batch
+from .ledger_batch import make_header_and_transaction
 
-
-
+import aiohttp
+import asyncio
+import time
+import json
 @asyncinit
-class SendTransactions(aobject):
+class SendTransactions(object):
     async def __init__(self, rest_api_url, timeout):
         #self.val = await self.deferredFn(param)
         self.rest_api_url = rest_api_url
@@ -26,7 +28,7 @@ class SendTransactions(aobject):
     async def push_transaction(self, batch_list_bytes):
         try:
             async with aiohttp.ClientSession(timeout=self.timeout) as session:
-                async with session.post(f"http://{rest_api_url}/batches",
+                async with session.post(f"http://{self.rest_api_url}/batches",
                                 data=batch_list_bytes,
                                 headers=self.headers) as response:
                     data = await response.read()
@@ -37,7 +39,7 @@ class SendTransactions(aobject):
         return data
 
 
-    async def wait_for_status(self, batch_id, rest_api_url, timeout):
+    async def wait_for_status(self, batch_id):
         """
         Once the batch is pushed on to the rest api of blockchain, wait for
         its confirmation, If the status of block sumission is COMMITTED return True
@@ -52,18 +54,31 @@ class SendTransactions(aobject):
                         headers=self.headers) as response:
                         await asyncio.sleep(0.1)
                         data = await response.read()
+            try:
+                data = self.load_json(data)
+                status = data['data'][0]['status']
+            except Exception as e:
+                logging.error("Error in wait for status")
+                logging.error(e)
+                status = ""
+                pass
 
             waited = time.time() - start_time
             logging.info(f"Trying again, to check block status BLOCK-STATUS {status}")
 
             if status != 'PENDING':
                 break
-        if status == "COMMITTED":
-            logging.info("Transaction successfully submittted")
-            return True
-        else:
-            logging.error("Error in the transaction {%s}"%data['data'][0]['message'])
-            raise ApiBadRequest("Error in the transaction {%s}"%data['data'][0]['message'])
+        logging.info(data)
+        try:
+            if status == "COMMITTED":
+                logging.info("Transaction successfully submittted")
+                return True
+            else:
+                logging.error("Error in the transaction {%s}"%data['data'][0]['message'])
+                raise ApiBadRequest("Error in the transaction {%s}"%data['data'][0]['message'])
+        except Exception as e:
+                logging.error(data["data"][0]["invalid_transactions"][0]["message"])
+
         return False
 
 
@@ -73,15 +88,8 @@ class SendTransactions(aobject):
             payload_type=payload_pb2.TransactionPayload.SHARE_SECRET,
             share_secret=payload)
 
-        logging.info(payload)
-        transaction_ids, batches, batch_id, batch_list_bytes =
-                        make_header_and_batch(
-                            payload=payload,
-                            inputs=inputs,
-                            outputs=outputs,
-                            txn_key=txn_key,
-                            batch_key=batch_key)
 
+        logging.info(payload)
         transaction_id, transaction =  make_header_and_transaction(
                                                     payload=payload,
                                                     inputs=inputs,
@@ -107,8 +115,8 @@ class SendTransactions(aobject):
             payload_type=payload_pb2.TransactionPayload.EXECUTE_SECRET,
             execute_secret=payload)
 
-        logging.info(payload)
-        transaction_ids, batches, batch_id, batch_list_bytes =
+        logging.info(payload, inputs, outputs)
+        transaction_ids, batches, batch_id, batch_list_bytes =\
                         make_header_and_batch(
                             payload=payload,
                             inputs=inputs,
@@ -124,11 +132,19 @@ class SendTransactions(aobject):
                                                     batch_key=batch_key)
 
         batch_bytes, batch_id = transactions_batch([transaction], batch_key)
-        return await self.push_n_wait(batch_bytes)
-
-    async def push_n_wait(self, batch_bytes):
-        rest_api_response = await self.push_transaction(batch_bytes)
-        logging.info(f"push transaction result is {data}")
-        if not await self.wait_for_status(batch_id):
-            raise errors.ApiInternalError("The batch couldnt be submitted")
+        await self.push_n_wait(batch_bytes, batch_id)
         return transaction_id, batch_id
+        
+    async def push_n_wait(self, batch_bytes, batch_id):
+        rest_api_response = await self.push_transaction(batch_bytes)
+        logging.info(f"push transaction result is {rest_api_response}")
+        if not await self.wait_for_status(batch_id):
+            raise ApiInternalError("The batch couldnt be submitted")
+        return
+
+    def load_json(self, data):
+        try:
+            request_json = json.loads(data.decode())
+        except Exception as e:
+            raise ApiBadRequest(f"Json cannot be parsed")
+        return request_json

@@ -203,14 +203,14 @@ async def test_get_all_shares():
 try:
     #asyncio.ensure_future(test_register_users())
     loop.run_until_complete(test_register_users())
-    #loop.run_until_complete(test_share_mnemonic())
+    loop.run_until_complete(test_share_mnemonic())
 
-    loop.run_until_complete(test_activate_mnemonic())
-    loop.run_until_complete(test_execute_share_mnemonic_2())
-    loop.run_until_complete(test_execute_share_mnemonic_3())
-    loop.run_until_complete(test_execute_share_mnemonic_4())
-    loop.run_until_complete(test_execute_share_mnemonic_5())
-    loop.run_until_complete(test_get_all_shares())
+    #loop.run_until_complete(test_activate_mnemonic())
+    #loop.run_until_complete(test_execute_share_mnemonic_2())
+    #loop.run_until_complete(test_execute_share_mnemonic_3())
+    #loop.run_until_complete(test_execute_share_mnemonic_4())
+    #loop.run_until_complete(test_execute_share_mnemonic_5())
+    #loop.run_until_complete(test_get_all_shares())
 
 finally:
     loop.close()

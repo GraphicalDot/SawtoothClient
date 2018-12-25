@@ -20,7 +20,7 @@ from routes import route_utils
 from encryption.utils import create_signer, encrypt_w_pubkey
 from encryption.symmetric import generate_aes_key, aes_encrypt
 from transactions.extended_batch import  multi_transactions_batch
-
+import random
 import aiohttp
 import asyncio
 import binascii
@@ -28,7 +28,7 @@ from ledger import messaging
 from errors.errors import ApiBadRequest, ApiInternalError
 from encryption.signatures import ecdsa_signature
 from db.share_mnemonic import store_share_mnemonics, update_shared_secret_array
-import coloredlogs, logging
+import coloredlogs, logging, json
 coloredlogs.install()
 from protocompiled import payload_pb2
 
@@ -69,47 +69,35 @@ async def share_mnemonic_batch_submit(app, requester_address, user_id,
 
 
 
-
     batch_id, batch_bytes = multi_transactions_batch(
                     [e["transaction"] for e in transactions], app.config.SIGNER)
 
 
+    """
+    for e in [e["transaction"] for e in transactions]:
+        logging.info(e)
+    """
 
-    instance = SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
-    instance.push_n_wait(batch_bytes)
+    instance = await SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
+    await instance.push_n_wait(batch_bytes, batch_id)
 
-    try:
-        ##This must be removed in production, since it stores shared_mnemonic
-        new_list = []
-        for transaction in transactions:
-            transaction.update({"batch_id": batch_id, "user_id": user_id})
-            ##removing payload
-            transaction.pop("transaction")
-            new_list.append(transaction)
-            ##For production purpose this code block must be validated
-            #for transaction in transactions:
-            #    transaction.update({"batch_id": batch_id, "user_id": user_id})
-            #   [trasaction.pop(e) for e in "secret_key", "key", "secret_hash"]
-
-        async with aiohttp.ClientSession() as session:
-            await asyncio.gather(*[
-                    store_share_mnemonics(app, trans)
-                    for trans in new_list
-
-
-            ])
-        ##updating shared_secret array of the users present in the database,
-        ##with the ownership key of every transaqction, address of the users
-        ##to whoim these transaction were addressed.
-        await update_shared_secret_array(app, user_id, [_t["ownership"] for _t in new_list])
-        return True
-
-    except (ApiBadRequest, ApiInternalError) as err:
-        #await auth_query.remove_auth_entry(request.app.config.DB_CONN, request.json.get('email'))
-        logging.error(f"Error in share_mnemonic_batch_submit {err}")
-        raise err
-        return False
-    return
+    new_list = []
+    for trans in transactions:
+        trans.update({"batch_id": batch_id, "user_id": user_id})
+        ##removing payload
+        trans.pop("transaction")
+        new_list.append(trans)
+        ##For production purpose this code block must be validated
+        #for transaction in transactions:
+        #    transaction.update({"batch_id": batch_id, "user_id": user_id})
+        #   [trasaction.pop(e) for e in "secret_key", "key", "secret_hash"]
+        f = await  store_share_mnemonics(app, trans)
+        logging.info(f)
+    ##updating shared_secret array of the users present in the database,
+    ##with the ownership key of every transaqction, address of the users
+    ##to whoim these transaction were addressed.
+    await update_shared_secret_array(app, user_id, [_t["ownership"] for _t in new_list])
+    return True
 
 
 
@@ -162,36 +150,43 @@ async def submit_share_mnemonic(app, requester_address, account,
                         "secret": encryptes_secret_share,
                         "key": encrypted_key,
                         "secret_hash": hashlib.sha512(secret_share.encode()).hexdigest(),
-                        "requester_address": requester_address,
                         "role": "USER",
                         "idx": index,
-                        "created_on": route_utils.indian_time_stamp()
+                        "created_on": route_utils.indian_time_stamp(),
                         "nonce": nonce,
                         "signed_nonce": signed_nonce,
-                        "nonce_hash": nonce_hash
+                        "nonce_hash": nonce_hash,
+                        "ownership": account["address"],
+                        "user_address": requester_address #because at the processing side
+                                            ##user state needs to be appended with
+                                            ##shared_asecret_address on their share_secret_addresses
+
                         }
 
 
     shared_secret_address = addresser.shared_secret_address(
         acc_signer.get_public_key().as_hex(), index)
 
-    ##both the inputs and outputs addresses will be the same 
-    addresses = [in_data["requester_address"],
-                shared_secret_address
-                ]
+    ##both the inputs and outputs addresses will be the same
+    ##requester addresss will be fetched from blockchain and checked if its exists
+    ##and the shared_secret_addresses will be appended to its
+    addresses = [requester_address, shared_secret_address]
+    logging.info(f"addresses are {addresses}")
 
     payload = payload_pb2.CreateShareSecret(**transaction_data)
 
-    instance = SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
-    transaction_id, transaction = instance.share_mnemonic_transaction(
+    instance = await SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
+    transaction_id, transaction = await instance.share_mnemonic_transaction(
                             txn_key=acc_signer, batch_key=app.config.SIGNER,
                             inputs=addresses, outputs=addresses, payload=payload)
 
     transaction_data.update({"transaction_id": transaction_id,
                             "transaction": transaction,
-                            "shared_secret_address": shared_secret_address})
+                            "shared_secret_address": shared_secret_address,
+                            "signed_nonce": signed_nonce.decode()})
 
     return transaction_data
 
 
 async def share_mnemonic_db():
+    pass

@@ -22,7 +22,7 @@ def generate_random_salt(number_of_bytes):
 def generate_scrypt_key(password, num_keys, salt=None):
     ##return bytes of keys, returns list in case of keys > 1
     if not salt:
-        salt = get_random_bytes(16)
+        salt = get_random_bytes(32)
     keys = scrypt(password,  salt, KEY_LENGTH, N, R, P, num_keys)
     return keys, salt
 

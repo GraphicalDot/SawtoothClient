@@ -19,7 +19,7 @@ async def store_share_mnemonics(app, data):
         raise CustomError(f"This user account couldnt be found user_id <<{data['user_id']}>>")
 
     try:
-        return await r.table(app.config.DATABASE["share_mnemonic"])\
+        result = await r.table(app.config.DATABASE["share_mnemonic"])\
             .insert(data).run(app.config.DB)
 
     except ReqlNonExistenceError as e:
@@ -27,13 +27,14 @@ async def store_share_mnemonics(app, data):
         raise ApiBadRequest(
             f"Error in storing asset {e}")
 
-    return
+    logging.info(f"Storing share mnemonic transaction {data} successful")
+    return result
 
 
 async def update_shared_secret_array(app, user_id, array):
     return await r.table(app.config.DATABASE["users"])\
             .filter({"user_id": user_id})\
-            .update({"shared_secret": array})\
+            .update({"share_secret_addresses": array})\
             .run(app.config.DB)
 
 
@@ -63,10 +64,11 @@ async def update_share_mnemonic(app, trans):
             .run(app.config.DB)
 
 
-async def update_mnemonic_encryption_salt(app, user_id, mnemonic_encryption_salt):
+async def update_mnemonic_encryption_salt(app, user_id,salt_one, salt_two):
     return await r.table(app.config.DATABASE["users"])\
             .filter({"user_id": user_id})\
-            .update({"org_mnemonic_encryption_salt": mnemonic_encryption_salt})\
+            .update({"org_mnemonic_encryption_salt_one": salt_one,
+                "org_mnemonic_encryption_salt_two": salt_two})\
             .run(app.config.DB)
 
 

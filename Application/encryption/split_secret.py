@@ -20,15 +20,19 @@ def split_mnemonic(email, mnemonic, minimum_required, total_shares):
 
     Output:
         salt: bytes
-        shares: list of str 
+        shares: list of str
 
     """
-    keys, salt = key_derivations.generate_scrypt_key(
+    key1, salt_one = key_derivations.generate_scrypt_key(
                                     email, 1, salt=None)
 
     ##Encypting mnemonic with AES key genearted from scrypt key
     ##generated from the email
-    ciphertext, tag, nonce = aes_encrypt(keys, mnemonic)
+    key2, salt_two = key_derivations.generate_scrypt_key(
+                                key1, 1, salt=None)
+
+
+    ciphertext, tag, nonce = aes_encrypt(key2, mnemonic)
 
     ##ciphertest must be appended with tag and nonce so that MAC can be checked
     ##while decryption
@@ -43,12 +47,12 @@ def split_mnemonic(email, mnemonic, minimum_required, total_shares):
     shares = sss.create(minimum_required, total_shares, hexlified_ciphertext)
 
     ##this salt will be kep in admin database, against this user mnemonic
-    return salt, shares
+    return salt_one, salt_two, shares
 
     #SecretSharer.split_secret("c4bbcb1fbec99d65bf59d85c8cb62ee2db963f0fe106f483d9afa73bd4e39a8a", 2, 3)
 
 
-def combine_secret(email, shares, salt):
+def combine_mnemonic(email, shares, salt):
     ##ARGs:
     ##      shares:str must be a list of shamir secrets,
     ##              must be minimum required when secrets were created

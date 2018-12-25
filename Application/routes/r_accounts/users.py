@@ -35,7 +35,7 @@ from encryption import signatures
 import aiohttp
 import asyncio
 import datetime
-from encryption.split_secret import split_secret, combine_secret
+from encryption.split_secret import split_mnemonic, combine_mnemonic
 from ledger import deserialize_state
 from routes.resolve_account import ResolveAccount
 from ledger import deserialize_state
@@ -251,7 +251,7 @@ async def share_mnemonic(request, requester):
     if they forget their Mnemonic we cant do anything about it
     """
 
-    required_fields = ["email_list", "minimum_required", "password"]
+    required_fields = ["email_list", "minimum_required"]
 
     validate_fields(required_fields, request.json)
 
@@ -296,16 +296,15 @@ async def share_mnemonic(request, requester):
     ##encrypt the mnemonic with this AES Key
     ##split the mnemonic, this way even if the user forgets its password, it can be
     ##decrypted using just his email
-    aes_encryption_salt, secret_shares = split_secret(request.json["email"],
+    kdf_salt_one, kdf_salt_two, secret_shares = split_mnemonic(user.org_db["email"],
                         user.decrypted_mnemonic, request.json["minimum_required"],
                         len(request.json["email_list"]))
-
 
 
     ##upadting user entry in the users table with the salt which was used in
     ##encrypting mnemonic before it was split into shamir secret shares
     await update_mnemonic_encryption_salt(request.app, requester["user_id"],
-        binascii.hexlify(aes_encryption_salt).decode())
+        binascii.hexlify(kdf_salt_one).decode(), binascii.hexlify(kdf_salt_two).decode())
     #index = list(nth_keys_data.keys())[0]
     await share_mnemonic_batch_submit(request.app, requester_address, requester["user_id"],
                 user_accounts, secret_shares, nth_keys_data)
