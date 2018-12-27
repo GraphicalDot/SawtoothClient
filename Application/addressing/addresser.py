@@ -62,6 +62,10 @@ class ChildAccountSpace(enum.IntEnum):
     START = 449
     STOP = 512
 
+class ReceiveSecretSpace(enum.IntEnum):
+    START = 513
+    STOP = 576
+
 
 def address_is(address):
 
@@ -99,6 +103,10 @@ def address_is(address):
     elif _contains(infix, TransferAssetSpace):
         result = AddressSpace.TRANSFER_ASSET
 
+
+    elif _contains(infix, ReceiveSecretSpace):
+        result = AddressSpace.RECEIVE_SECRET
+
     else:
         result = AddressSpace.OTHER_FAMILY
 
@@ -122,9 +130,10 @@ class AddressSpace(enum.IntEnum):
     RECEIVE_ASSET = 2
     TRANSFER_ASSET = 3
     SHARED_SECRET = 4
-    USER_ACCOUNT = 5
-    ORGANIZATION_ACCOUNT=6
-    CHILD_ACCOUNT=7
+    RECEIVE_SECRET =5
+    USER_ACCOUNT = 6
+    ORGANIZATION_ACCOUNT=7
+    CHILD_ACCOUNT=8
     OTHER_FAMILY = 100
 
 
@@ -140,6 +149,19 @@ def shared_secret_address(public, index):
             + index_hex\
             +_compress(full_hash, SharedSecretSpace.START, SharedSecretSpace.STOP)\
             + full_hash[:53]
+
+def receive_secret_address(public, index):
+
+    index_hex = '{:08x}'.format(index)
+    full_hash = _hash(public)
+
+
+    return NS \
+            + index_hex\
+            +_compress(full_hash, ReceiveSecretSpace.START, ReceiveSecretSpace.STOP)\
+            + full_hash[:53]
+
+
 
 
 def user_address(public, index):
@@ -235,7 +257,8 @@ def hex_to_int(int_hex):
 
 def test_address(key):
     g = random.randint(0, 2**32-1)
-    _float_account_address = shared_secret_address(key, g)
+    _share_secret_address = shared_secret_address(key, g)
+    _receive_secret_address = receive_secret_address(key, g)
     _asset_address = asset_address(key, g)
     _share_asset_address = share_asset_address(key, g)
     _receive_asset_address = receive_asset_address(key, g)
@@ -245,10 +268,11 @@ def test_address(key):
     organization_acc_address = organization_address(key, g)
     child_acc_address = child_address(key, g)
 
-    print ("SHARED_SECRET", _float_account_address, address_is(_float_account_address))
+    print ("SHARE_SECRET", _share_secret_address, address_is(_share_secret_address))
+    print ("RECEIVE_SECRET", _receive_secret_address, address_is(_receive_secret_address))
     print ("USER_ACCOUNT", user_account_address, address_is(user_account_address))
-    print ("Organization Address", organization_address, address_is(organization_acc_address))
-    print ("Child account Address", child_address, address_is(child_acc_address))
+    print ("Organization Address", organization_acc_address, address_is(organization_acc_address))
+    print ("Child account Address", child_acc_address, address_is(child_acc_address))
 
     print ("Create Asset Address", _asset_address, address_is(_asset_address))
     print ("Share asset address", _share_asset_address, address_is(_share_asset_address))

@@ -1,8 +1,10 @@
 
+from routes.route_utils import generate_key_index, indian_time_stamp
+from remotecalls import remote_calls
 
 
 
-
+"""
 import time
 from db import accounts_query
 import hashlib
@@ -11,7 +13,6 @@ import hashlib
 #from encryption import asymmetric
 #from encryption import symmetric
 #import ledger.utils as ledger_utils
-from remotecalls import remote_calls
 from ledger import deserialize_state
 from errors import errors
 from .__send_share_mnemonic import __send_share_mnemonic
@@ -35,7 +36,7 @@ from protocompiled import payload_pb2
 from ledger.send_transaction import SendTransactions
 async def share_mnemonic_batch_submit(app, requester_address, user_id,
                             user_accounts, secret_shares, nth_keys_data):
-    """
+
     Args:
         requester_address(str): The user who is sharing his Mnemonic
         user_id(str): user_id of the user who is sharing the Menmonic
@@ -101,24 +102,14 @@ async def share_mnemonic_batch_submit(app, requester_address, user_id,
 
 
 
-async def submit_receive_mnemonic(app, requester_address, account,
-                secret_share, index, private_key):
+async def submit_receive_secret(app, requester_state, requester_mnemonic):
 
     """
     Args:
-        requester_address(str): The user who wants to share the mnemonic
-        account(dict): The blockchain state of the user to whom this user wants to
-                share the mnemonic
-        secret_share (str): One share of the encrypted mnemonic of the user out of many
-            others which will be shared with the user represented by account.
-        index(int): ranom index generated from the user mnemonic at which a new
-            shared_mnemonic address will be generated at which this share of the mnemonic
-            will be stored after encrypting it with a random AES key and encrypting AES
-            key with the public key of the user represented but the account.
-        private_key(str): private key of the requested generated from its mnemonic
-            present at the index.
+        requester_state(str): The user state present on the blockchain who wants
+            to create a new receive secret address
+        requester_mnemonic: decrypted mnemonic of the user
     """
-    acc_signer=create_signer(private_key)
 
 
     ##encrypting the shared mnemonic with users account public key
@@ -127,44 +118,40 @@ async def submit_receive_mnemonic(app, requester_address, account,
 
     #logging.info(encrypted_secret_share)
     #secret_share = binascii.hexlify(encrypted_secret_share)
+    index = generate_key_index(requester_state["receive_secret_idxs"])
+    nth_keys = await remote_calls.key_index_keys(app, requester_mnemonic,
+                                                        [index, 0])
+
+    nth_priv, nth_pub = nth_keys[str(key_index)]["private_key"], \
+                        nth_keys[str(key_index)]["public_key"]
 
 
-    key = generate_aes_key(16) ##this is in bytes
-    ciphertext, tag, nonce = aes_encrypt(key, secret_share)
-    ciphertext = b"".join([tag, ciphertext, nonce])
-    ##The AES_GCM encrypted file content
-    encryptes_secret_share = binascii.hexlify(ciphertext).decode()
+    zeroth_priv, zeroth_pub = nth_keys[str(0)]["private_key"], \
+                        nth_keys[str(0)]["public_key"]
 
-    ##Encrypting AES key with the child public key, output will ne hex encoded
-    ##encryted AES key
-    encrypted_key = encrypt_w_pubkey(key, account["public"])
 
+
+    ##to prove that this receive_secret has been created by the user himself,
+    ##nonce must be signed by the zeroth private of the account
     nonce = random.randint(2**20, 2**30)
     ##nonce signed by zerothprivate key and in hex format
-    signed_nonce = ecdsa_signature(private_key, nonce)
+    signed_nonce = ecdsa_signature(zeroth_priv, nonce)
     nonce_hash= hashlib.sha512(str(nonce).encode()).hexdigest()
 
 
-    transaction_data= {"ownership": account["address"],
-                        "active": False,
-                        "secret": encryptes_secret_share,
-                        "key": encrypted_key,
-                        "secret_hash": hashlib.sha512(secret_share.encode()).hexdigest(),
-                        "role": "USER",
+    acc_signer=create_signer(nth_priv)
+
+    transaction_data= {"role": requester_state["role"],
+                        "active": True,
                         "idx": index,
-                        "created_on": route_utils.indian_time_stamp(),
+                        "created_on": indian_time_stamp(),
                         "nonce": nonce,
                         "signed_nonce": signed_nonce,
                         "nonce_hash": nonce_hash,
-                        "ownership": account["address"],
-                        "user_address": requester_address #because at the processing side
-                                            ##user state needs to be appended with
-                                            ##shared_asecret_address on their share_secret_addresses
-
                         }
 
 
-    shared_secret_address = addresser.shared_secret_address(
+    receive_secret_address = addresser.received_secret_address(
         acc_signer.get_public_key().as_hex(), index)
 
     ##both the inputs and outputs addresses will be the same

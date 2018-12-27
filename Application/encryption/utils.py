@@ -23,28 +23,6 @@ def create_signer(private_key_hex):
 
 
 
-async def decrypted_user_mnemonic(app, encrypted_admin_mnemic, role):
-    """
-    return decrypted user mnemonic
-
-    All the user menmonics for every tole except the "ADMIN" role is present in
-    DB in two forms, One is encrypted with "ADMIN" ZERO key and the other is
-    encrypted with the key generated from the user password with Scrypt alogirithm
-    if user has already claimed his/her account
-    """
-
-    if role == "ADMIN":
-        return app.config.ADMIN_MNEMONIC
-
-    return decrypt_mnemonic_privkey(
-                                            encrypted_admin_mnemic,
-                                            app.config.ADMIN_ZERO_PRIV)
-
-
-
-
-
-
 def encrypt_mnemonic_pubkey(mnemonic, pub_key):
     ##this encrypts the mnemonic witht he public key
     encrypted_mnemonic = pub_encrypt(mnemonic.encode(), pub_key)

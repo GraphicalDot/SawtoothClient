@@ -16,6 +16,7 @@
     "ADMIN_PHONE_NUMBER": "9958491323",
     "REST_API_URL": "172.28.128.4:8008",
     "ADMIN_ORG_NAME": "Remedium",
+    "MAX_RECEIVE_SECRET": 20,
     "HOST": "0.0.0.0",
     "PORT": 8000,
     "TIMEOUT": 60,

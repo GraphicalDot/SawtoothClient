@@ -23,6 +23,7 @@ from ledger.accounts.user_account.submit_user_account import submit_user_account
 from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import share_mnemonic_batch_submit
 from ledger.mnemonics.activate_shares.submit_activate_shares import activate_shares_batch_submit
 from ledger.mnemonics.execute_shared_mnemonic.submit_execute_share_mnemonic import submit_execute_share_mnemonic
+from ledger.mnemonics.receive_secrets.submit_receive_secrets import submit_receive_secrets
 
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
@@ -456,6 +457,35 @@ async def get_otp(request):
                 'success': True,
                 'message': "Please check your Email and Phone number for OTP",
                 })
+
+
+
+
+@USERS_BP.post('/create_receive_secret')
+@authorized()
+async def receive_secret(request, requester):
+    """
+    Wheneve a user shares their secret with other users, the user must
+    have a receive_secret address, which must be generated from his mnemonic
+    at some random index, this index will then be appended to users receive_secret_idxs
+    array
+    """
+
+
+    if requester["role"] == "USER":
+        requester_address = addresser.user_address(requester["acc_zero_pub"], 0)
+    else:
+        ##handle case for organization
+        pass
+
+    ##resolving account for the requester to get his decrypted menmonic
+    user = await ResolveAccount(requester, request.app)
+    logging.info(user.decrypted_mnemonic)
+
+
+    if len(user.org_state["receive_secret_idxs"])  >= request.app.config.MAX_RECEIVE_SECRET:
+        raise errors.ApiInternalError("Maximum amount of rceive_secret addresses limit reached")
+
 
 
 
