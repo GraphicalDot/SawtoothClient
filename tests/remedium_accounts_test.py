@@ -16,6 +16,7 @@ import asyncio
 import aiohttp
 import rethinkdb as ret
 
+receive_secret_addresses = {}
 """
 
 """
@@ -142,6 +143,7 @@ async def boilerplate_get_receive_secrets(user):
     instance = await SecretAPIS()
     response = await instance.get_receive_secrets(user)
     logging.info(json.dumps(response.json()["data"], indent=10))
+    return response.json()["data"]
 
 async def boilerplate_execute_share_mnemonic(user):
     ##Since shasred_secret addresses has been floated by our main user1, to several
@@ -218,24 +220,69 @@ async def test_get_all_shares():
 
 
 
-async def test_create_receive_secret():
+async def test_create_receive_secret_usr2():
     await boilerplate_receive_secret(user2)
+    await boilerplate_receive_secret(user2)
+
+
+async def test_create_receive_secret_usr3():
+    await boilerplate_receive_secret(user3)
+    await boilerplate_receive_secret(user3)
+
+
+async def test_create_receive_secret_usr4():
+    await boilerplate_receive_secret(user4)
+    await boilerplate_receive_secret(user4)
+
+
+async def test_create_receive_secret_usr5():
+    await boilerplate_receive_secret(user5)
+    await boilerplate_receive_secret(user5)
 
 
 async def test_get_account():
     await boilerplate_get_account(user2)
 
 
-async def test_get_receive_secrets():
-    await boilerplate_get_receive_secrets(user2)
+async def test_get_receive_secrets_usr2():
+    result = await boilerplate_get_receive_secrets(user2)
+    global receive_secret_addresses
+    receive_secret_addresses.update({"user2": [e["address"] for e in result]})
+
+async def test_get_receive_secrets_usr3():
+    result = await boilerplate_get_receive_secrets(user3)
+    global receive_secret_addresses
+    receive_secret_addresses.update({"user3": [e["address"] for e in result]})
+
+
+async def test_get_receive_secrets_usr4():
+    result = await boilerplate_get_receive_secrets(user4)
+    global receive_secret_addresses
+    receive_secret_addresses.update({"user4": [e["address"] for e in result]})
+
+
+async def test_get_receive_secrets_usr5():
+    result = await boilerplate_get_receive_secrets(user5)
+    global receive_secret_addresses
+    receive_secret_addresses.update({"user5": [e["address"] for e in result]})
 
 
 try:
     #asyncio.ensure_future(test_register_users())
     loop.run_until_complete(test_register_users())
     #loop.run_until_complete(test_create_receive_secret())
-    loop.run_until_complete(test_get_account())
-    loop.run_until_complete(test_get_receive_secrets())
+    #loop.run_until_complete(test_create_receive_secret_usr2())
+    #loop.run_until_complete(test_create_receive_secret_usr3())
+    #loop.run_until_complete(test_create_receive_secret_usr4())
+    #loop.run_until_complete(test_create_receive_secret_usr5())
+
+
+
+    loop.run_until_complete(test_get_receive_secrets_usr2())
+    loop.run_until_complete(test_get_receive_secrets_usr3())
+    loop.run_until_complete(test_get_receive_secrets_usr4())
+    loop.run_until_complete(test_get_receive_secrets_usr5())
+    #loop.run_until_complete(test_get_account())
 
     #loop.run_until_complete(test_share_mnemonic())
 
@@ -248,3 +295,6 @@ try:
 
 finally:
     loop.close()
+
+
+logging.info(receive_secret_addresses)

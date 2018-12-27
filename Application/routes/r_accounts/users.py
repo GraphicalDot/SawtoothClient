@@ -515,6 +515,9 @@ async def receive_secret(request, requester):
         raise errors.ApiInternalError("Empty receive secrets for this user")
 
 
+    for element in receive_secret_addrs:
+        logging.info(addresser.address_is(element))
+
     async with aiohttp.ClientSession() as session:
         receive_secret_contracts= await asyncio.gather(*[
             deserialize_state.deserialize_receive_secret(
