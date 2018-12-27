@@ -23,7 +23,7 @@ from ledger.accounts.user_account.submit_user_account import submit_user_account
 from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import share_mnemonic_batch_submit
 from ledger.mnemonics.activate_shares.submit_activate_shares import activate_shares_batch_submit
 from ledger.mnemonics.execute_shared_mnemonic.submit_execute_share_mnemonic import submit_execute_share_mnemonic
-from ledger.mnemonics.receive_secrets.submit_receive_secrets import submit_receive_secrets
+from ledger.mnemonics.receive_secrets.submit_receive_secret import submit_receive_secret
 
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
@@ -483,11 +483,20 @@ async def receive_secret(request, requester):
     logging.info(user.decrypted_mnemonic)
 
 
-    if len(user.org_state["receive_secret_idxs"])  >= request.app.config.MAX_RECEIVE_SECRET:
-        raise errors.ApiInternalError("Maximum amount of rceive_secret addresses limit reached")
+    if user.org_state.get("receive_secret_idxs"):
+        if len(user.org_state.get("receive_secret_idxs"))  >= \
+                                        request.app.config.MAX_RECEIVE_SECRET:
+            raise errors.ApiInternalError("Maximum amount of rceive_secret \
+                                addresses limit reached")
 
+    await submit_receive_secret(request.app, user.org_state,
+                    requester_address, user.decrypted_mnemonic)
 
-
+    return response.json(
+        {
+        'error': False,
+        'success': True,
+        })
 
 
 """

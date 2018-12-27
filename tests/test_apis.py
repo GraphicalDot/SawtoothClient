@@ -4,7 +4,8 @@
 import requests
 import rethinkdb as ret
 from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN, GET_OTPS, \
-            FORGOT_PASSWORD, ALL_SHARE_SECRETS, EXECUTE_SHARE_SECRET
+            FORGOT_PASSWORD, ALL_SHARE_SECRETS, EXECUTE_SHARE_SECRET,\
+            CREATE_RECEIVE_SECRET
 
 from test_miscelleneous import get_headers, receive_asset_data, revoke_time_stamp
 import json
@@ -134,6 +135,15 @@ class aobject(object):
 
     async def __init__(self):
         pass
+
+class SecretAPIS(aobject):
+
+
+    async def create_receive_secret(self, requester):
+        headers = get_headers(requester["email"],
+                        requester["password"])
+        return requests.post(CREATE_RECEIVE_SECRET,
+                    headers=headers)
 
 class AccountApis(aobject):
     async def __init__(self):

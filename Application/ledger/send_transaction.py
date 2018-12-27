@@ -10,12 +10,16 @@ from protocompiled import payload_pb2
 from transactions.extended_batch import make_header_and_batch
 
 from asyncinit import asyncinit
-from .ledger_batch import make_header_and_transaction
+from .ledger_batch import make_header_and_transaction, transactions_batch
 
 import aiohttp
 import asyncio
 import time
 import json
+
+
+
+
 @asyncinit
 class SendTransactions(object):
     async def __init__(self, rest_api_url, timeout):
@@ -134,7 +138,10 @@ class SendTransactions(object):
         batch_bytes, batch_id = transactions_batch([transaction], batch_key)
         await self.push_n_wait(batch_bytes, batch_id)
         return transaction_id, batch_id
-        
+
+
+
+
     async def push_n_wait(self, batch_bytes, batch_id):
         rest_api_response = await self.push_transaction(batch_bytes)
         logging.info(f"push transaction result is {rest_api_response}")
@@ -148,3 +155,33 @@ class SendTransactions(object):
         except Exception as e:
             raise ApiBadRequest(f"Json cannot be parsed")
         return request_json
+
+
+
+@asyncinit
+class SendReceiveSecret(SendTransactions):
+    async def __init__(self,  rest_api_url, timeout):
+        await super().__init__(rest_api_url, timeout)
+
+    async def push_receive_secret(self, txn_key=False, batch_key=False,
+                                    inputs=False, outputs=False, payload=False):
+        payload = payload_pb2.TransactionPayload(
+            payload_type=payload_pb2.TransactionPayload.RECEIVE_SECRET,
+            receive_secret=payload)
+
+
+        transaction_id, transaction =  make_header_and_transaction(
+                                                    payload=payload,
+                                                    inputs=inputs,
+                                                    outputs=outputs,
+                                                    txn_key=txn_key,
+                                                    batch_key=batch_key)
+
+        #rest_api_response = await self.push_transaction(batch_list_bytes)
+        #logging.info(f"push transaction result is {data}")
+        #if not await self.wait_for_status(batch_id):
+        #        raise errors.ApiInternalError("The batch couldnt be submitted")
+
+        batch_bytes, batch_id = transactions_batch([transaction], batch_key)
+        await self.push_n_wait(batch_bytes, batch_id)
+        return transaction_id, batch_id

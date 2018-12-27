@@ -177,10 +177,9 @@ class ResolveAccount(aobject):
 
         else:
             ##if we are getting float accounts for admin directly
-            decrypted_mnemonic = await encryption_utils.decrypted_user_mnemonic(
-                self.app,
+            decrypted_mnemonic =  encryption_utils.decrypt_mnemonic_privkey(
                 self.org_db["encrypted_admin_mnemonic"],
-                self.role)
+                self.app.config.ADMIN_ZERO_PRIV)
         return decrypted_mnemonic
 
 

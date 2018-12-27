@@ -61,8 +61,7 @@ def transactions_batch(transactions, batch_key):
         transactions=transactions)
 
     batch_list_bytes = BatchList(batches=[batch]).SerializeToString()
-    return batch.header_signature, batch_list_bytes
-
+    return  batch_list_bytes, batch.header_signature
 
 
 def make_header_and_transaction(payload, inputs, outputs, txn_key, batch_key,
