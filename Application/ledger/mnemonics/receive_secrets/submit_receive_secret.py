@@ -73,6 +73,8 @@ async def submit_receive_secret(app, requester_state, requester_address, request
                         "nonce": nonce,
                         "signed_nonce": signed_nonce,
                         "nonce_hash": nonce_hash,
+                        "requester_address": requester_address,
+                        "idx": index,
                         }
 
 
@@ -82,7 +84,7 @@ async def submit_receive_secret(app, requester_state, requester_address, request
     ##both the inputs and outputs addresses will be the same
     ##requester addresss will be fetched from blockchain and checked if its exists,
     ##The receive_secret idx will be appended to the array fo account
-    
+
     addresses = [requester_address, receive_secret_address]
     logging.info(f"addresses are {addresses}")
 

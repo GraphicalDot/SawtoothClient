@@ -19,7 +19,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='user.proto',
   package='',
   syntax='proto3',
-  serialized_pb=_b('\n\nuser.proto\"\x93\x03\n\x0bUserAccount\x12\x0c\n\x04role\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0f\n\x07pancard\x18\x03 \x01(\t\x12\x0f\n\x07user_id\x18\x04 \x01(\t\x12\r\n\x05\x65mail\x18\x05 \x01(\t\x12\x12\n\nfirst_name\x18\x07 \x01(\t\x12\x11\n\tlast_name\x18\x08 \x01(\t\x12\x0c\n\x04time\x18\t \x01(\r\x12\x13\n\x0bindian_time\x18\n \x01(\t\x12\x12\n\ndeactivate\x18\x0b \x01(\x08\x12\x15\n\rdeactivate_on\x18\x0c \x01(\t\x12\x1d\n\x11\x63reate_asset_idxs\x18\r \x03(\rB\x02\x10\x01\x12\x1c\n\x10share_asset_idxs\x18\x0e \x03(\rB\x02\x10\x01\x12\x1e\n\x12\x63hild_account_idxs\x18\x0f \x03(\rB\x02\x10\x01\x12\x1e\n\x16share_secret_addresses\x18\x10 \x03(\t\x12-\n\x17\x61uthenticity_signatures\x18\x11 \x03(\x0b\x32\x0c.USignatures\x12\x0e\n\x06public\x18\x12 \x01(\t\"W\n\x0bUSignatures\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\r\n\x05nonce\x18\x02 \x01(\r\x12\x14\n\x0csigned_nonce\x18\x03 \x01(\t\x12\x12\n\nnonce_hash\x18\x04 \x01(\tb\x06proto3')
+  serialized_pb=_b('\n\nuser.proto\"\xb0\x03\n\x0bUserAccount\x12\x0c\n\x04role\x18\x01 \x01(\t\x12\x14\n\x0cphone_number\x18\x02 \x01(\t\x12\x0f\n\x07pancard\x18\x03 \x01(\t\x12\x0f\n\x07user_id\x18\x04 \x01(\t\x12\r\n\x05\x65mail\x18\x05 \x01(\t\x12\x12\n\nfirst_name\x18\x07 \x01(\t\x12\x11\n\tlast_name\x18\x08 \x01(\t\x12\x0c\n\x04time\x18\t \x01(\r\x12\x13\n\x0bindian_time\x18\n \x01(\t\x12\x12\n\ndeactivate\x18\x0b \x01(\x08\x12\x15\n\rdeactivate_on\x18\x0c \x01(\t\x12\x1d\n\x11\x63reate_asset_idxs\x18\r \x03(\rB\x02\x10\x01\x12\x1c\n\x10share_asset_idxs\x18\x0e \x03(\rB\x02\x10\x01\x12\x1e\n\x12\x63hild_account_idxs\x18\x0f \x03(\rB\x02\x10\x01\x12\x1e\n\x16share_secret_addresses\x18\x10 \x03(\t\x12\x1b\n\x13receive_secret_idxs\x18\x11 \x03(\r\x12-\n\x17\x61uthenticity_signatures\x18\x12 \x03(\x0b\x32\x0c.USignatures\x12\x0e\n\x06public\x18\x13 \x01(\t\"g\n\x0bUSignatures\x12\x0f\n\x07\x61\x64\x64ress\x18\x01 \x01(\t\x12\r\n\x05nonce\x18\x02 \x01(\r\x12\x14\n\x0csigned_nonce\x18\x03 \x01(\t\x12\x12\n\nnonce_hash\x18\x04 \x01(\t\x12\x0e\n\x06public\x18\x05 \x01(\tb\x06proto3')
 )
 
 
@@ -138,15 +138,22 @@ _USERACCOUNT = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='authenticity_signatures', full_name='UserAccount.authenticity_signatures', index=15,
-      number=17, type=11, cpp_type=10, label=3,
+      name='receive_secret_idxs', full_name='UserAccount.receive_secret_idxs', index=15,
+      number=17, type=13, cpp_type=3, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='public', full_name='UserAccount.public', index=16,
-      number=18, type=9, cpp_type=9, label=1,
+      name='authenticity_signatures', full_name='UserAccount.authenticity_signatures', index=16,
+      number=18, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='public', full_name='UserAccount.public', index=17,
+      number=19, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=_b("").decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
@@ -164,7 +171,7 @@ _USERACCOUNT = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=15,
-  serialized_end=418,
+  serialized_end=447,
 )
 
 
@@ -203,6 +210,13 @@ _USIGNATURES = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='public', full_name='USignatures.public', index=4,
+      number=5, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=_b("").decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -215,8 +229,8 @@ _USIGNATURES = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=420,
-  serialized_end=507,
+  serialized_start=449,
+  serialized_end=552,
 )
 
 _USERACCOUNT.fields_by_name['authenticity_signatures'].message_type = _USIGNATURES

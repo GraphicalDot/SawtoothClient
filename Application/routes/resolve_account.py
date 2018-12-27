@@ -232,6 +232,19 @@ class ResolveAccount(aobject):
         logging.info(f"Asset address list <<{address_list}>>")
         return address_list
 
+    async def receive_secrets(self):
+        receive_secret_idxs, nth_keys = await self.indexes_n_pub_priv_pairs("receive_secret_idxs")
+        address_list = []
+        for key_index in receive_secret_idxs:
+            public_key = nth_keys[str(key_index)]["public_key"]
+            receive_secret_address = addresser.receive_secret_address(
+                    public_key, key_index
+                    )
+            address_list.append(receive_secret_address)
+        logging.info(f"Receive secrets address list <<{address_list}>>")
+        return address_list
+
+
     async def receive_assets(self):
         receive_asset_idxs, nth_keys = await self.indexes_n_pub_priv_pairs("receive_asset_idxs")
         address_list = []

@@ -3,7 +3,7 @@
 
 from protocompiled import float_account_pb2, account_pb2, asset_pb2, \
                 organization_account_pb2, child_account_pb2, receive_asset_pb2, \
-                share_asset_pb2, user_pb2, share_secret_pb2
+                share_asset_pb2, user_pb2, share_secret_pb2, receive_secret_pb2
 from google.protobuf.json_format import MessageToDict
 import requests
 import json

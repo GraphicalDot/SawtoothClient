@@ -17,7 +17,7 @@ message UserAccount {
     repeated uint32 share_asset_idxs = 14 [packed=true];
     repeated uint32 child_account_idxs = 15 [packed=true];
     repeated string share_secret_addresses = 16;
-    repeated string receive_secret_idxs= 17;
+    repeated uint32 receive_secret_idxs= 17;
     repeated USignatures authenticity_signatures= 18;
     string public = 19;
 }

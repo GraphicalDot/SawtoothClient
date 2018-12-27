@@ -49,15 +49,17 @@ message TransactionPayload {
 // then ecnrypt the secret with this new reset key
 
 message CreateReceiveSecret {
+    string role=1;
     bool active=2;
     //THis active will be True if the user has asked for password reset,
     //Once reset, the secret will be updated again as encryption with same key
     //is not good, New aes key will be generated with new salt
-    string role=6;
-    string created_on=10;
-    uint32 nonce=16;
-    string nonce_hash=17;
-    string signed_nonce=18;
+    string created_on=3;
+    uint32 nonce=4;
+    string nonce_hash=5;
+    string signed_nonce=6;
+    string requester_address=7;
+    uint32 idx =8;
 }
 
 
@@ -127,7 +129,7 @@ message CreateUserAccount {
     repeated uint32 share_asset_idxs = 14 [packed=true];
     repeated uint32 child_account_idxs = 15 [packed=true];
     repeated string share_secret_addresses = 16;
-    repeated string receive_secret_idxs = 17;
+    repeated uint32 receive_secret_idxs = 17;
     repeated _Signatures authenticity_signatures= 18;
 
 }

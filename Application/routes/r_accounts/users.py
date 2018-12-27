@@ -489,13 +489,60 @@ async def receive_secret(request, requester):
             raise errors.ApiInternalError("Maximum amount of rceive_secret \
                                 addresses limit reached")
 
-    await submit_receive_secret(request.app, user.org_state,
+    data = await submit_receive_secret(request.app, user.org_state,
                     requester_address, user.decrypted_mnemonic)
 
     return response.json(
         {
         'error': False,
         'success': True,
+        "data": data
+        })
+
+
+
+@USERS_BP.post('/get_receive_secrets')
+@authorized()
+async def receive_secret(request, requester):
+    """
+    Allt
+    """
+    f = await ResolveAccount(requester, request.app)
+
+    receive_secret_addrs = await f.receive_secrets()
+
+    if not receive_secret_addrs:
+        raise errors.ApiInternalError("Empty receive secrets for this user")
+
+
+    async with aiohttp.ClientSession() as session:
+        receive_secret_contracts= await asyncio.gather(*[
+            deserialize_state.deserialize_receive_secret(
+                    request.app.config.REST_API_URL, address)
+                for address in receive_secret_addrs
+        ])
+    return response.json(
+        {
+        'error': False,
+        'success': True,
+        "data": receive_secret_contracts
+        })
+
+
+
+
+@USERS_BP.get('/get_account')
+@authorized()
+async def get_account(request, requester):
+    #To get all the account created by the requester
+
+    f = await ResolveAccount(requester, request.app)
+
+    return response.json(
+        {
+        'error': False,
+        'success': True,
+        "data": f.org_state,
         })
 
 
