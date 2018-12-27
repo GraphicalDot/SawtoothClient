@@ -79,10 +79,15 @@ class ResolveAddress(aobject):
             self.data = await deserialize_state.deserialize_receive_asset(
                         self.rest_api_url, self.address)
 
-        elif self.address_type == "SHARED_SECRET":
-            logging.info("Address is SHARED_SECRET")
+        elif self.address_type == "SHARE_SECRET":
+            logging.info("Address is SHARE_SECRET")
             self.type = "SHARE_SECRET"
             self.data = await deserialize_state.deserialize_share_secret(
+                        self.rest_api_url, self.address)
+        elif self.address_type == "RECEIVE_SECRET":
+            logging.info("Address is RECEIVE_SECRET")
+            self.type = "RECEIVE_SECRET"
+            self.data = await deserialize_state.deserialize_receive_secret(
                         self.rest_api_url, self.address)
         else:
             logging.info("Address is Unknown")

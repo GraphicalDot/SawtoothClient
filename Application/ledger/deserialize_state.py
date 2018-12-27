@@ -117,6 +117,18 @@ async def deserialize_share_secret(REST_API_URL, address):
         asset.update({"address": address})
         return asset
 
+async def deserialize_receive_secret(REST_API_URL, address):
+        logging.info(f"Now deserializing receive_secret  present on {address}")
+        state_data = await address_state(REST_API_URL, address)
+        ##decoding data stored on the blockchain
+        if not state_data:
+            return False
+        acc = receive_secret_pb2.ReceiveSecret()
+        acc.ParseFromString(state_data)
+        asset = MessageToDict(acc, preserving_proto_field_name=True)
+        asset.update({"address": address})
+        return asset
+
 async def deserialize_asset(REST_API_URL, address):
         logging.info(f"Now deserializing asset present on {address}")
         state_data = await address_state(REST_API_URL, address)
