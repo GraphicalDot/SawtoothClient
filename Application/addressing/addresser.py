@@ -235,8 +235,7 @@ def receive_asset_address(public, index):
 
 
 def _hash(identifier):
-    return hashlib.sha512(identifier.encode()).hexdigest()
-
+    return hashlib.sha512(hashlib.sha512(identifier.encode()).hexdigest().encode()).hexdigest()
 
 
 def _compress(address, start, stop):

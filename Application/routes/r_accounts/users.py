@@ -20,7 +20,7 @@ import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
 from ledger.accounts.user_account.submit_user_account import submit_user_account
-from ledger.mnemonics.share_mnemonics.submit_share_mnemonic import share_mnemonic_batch_submit
+from ledger.mnemonics.share_secrets.submit_share_secret import share_secret_batch_submit
 from ledger.mnemonics.activate_shares.submit_activate_shares import activate_shares_batch_submit
 from ledger.mnemonics.execute_shared_mnemonic.submit_execute_share_mnemonic import submit_execute_share_mnemonic
 from ledger.mnemonics.receive_secrets.submit_receive_secret import submit_receive_secret
@@ -251,13 +251,25 @@ async def share_mnemonic(request, requester):
     When a user taked the responsibility to own their mnemonic,
     if they forget their Mnemonic we cant do anything about it
     """
-
-    required_fields = ["email_list", "minimum_required"]
+    ##users has to make sure that these receive_secret_addrs must belong to
+    ##different users, Otherwise a same user can join the secrets and brute forse the scrypt
+    ##key generated from their email address and decrypt the joined mnemonic
+    required_fields = ["receive_secret_addrs", "minimum_required"]
 
     validate_fields(required_fields, request.json)
 
     if request.json["minimum_required"] < 3:
         raise errors.CustomError("To share passwords minimum 3 users are required")
+
+    ##check whether all the receive_secret_addrs are valid
+    for addr in receive_secret_addrs:
+        try:
+            if "RECEIVE_SECRET" != addresser.address_is(element)[0]:
+                raise ApiInternalError("Not a receive_secret address")
+        except Exception as e:
+            logging.error(e)
+            logging.error("Unknown addresses Type")
+            raise errors.ApiInternalError("Unknown addresses Type")
 
 
     if requester["role"] == "USER":
@@ -266,22 +278,15 @@ async def share_mnemonic(request, requester):
         ##handle case for organization
         pass
     ##fecth all accounts present in the email_list from the users table in database
-    async with aiohttp.ClientSession() as session:
-        friends= await asyncio.gather(*[
-            accounts_query.find_on_key(request.app, "email", email)
-                 for email in request.json["email_list"]
-        ])
-
 
 
     ##make all account addresses for all accounts present in the database
-    addresses= [addresser.user_address(friend["acc_zero_pub"], 0) for friend in friends]
-
     ## Fetch all accounts corresponding to the addresses from the blockchain
     async with aiohttp.ClientSession() as session:
-        user_accounts= await asyncio.gather(*[
-            deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
-                 for address in addresses
+        receive_secrets= await asyncio.gather(*[
+            deserialize_state.deserialize_receive_secret(
+                            request.app.config.REST_API_URL, address)
+                 for address in request.json["receive_secret_addrs"]
         ])
 
     ##resolving account for the requester to get his decrypted menmonic
@@ -307,8 +312,8 @@ async def share_mnemonic(request, requester):
     await update_mnemonic_encryption_salt(request.app, requester["user_id"],
         binascii.hexlify(kdf_salt_one).decode(), binascii.hexlify(kdf_salt_two).decode())
     #index = list(nth_keys_data.keys())[0]
-    await share_mnemonic_batch_submit(request.app, requester_address, requester["user_id"],
-                user_accounts, secret_shares, nth_keys_data)
+    await share_secret_batch_submit(request.app, requester_address, requester,
+                receive_secrets, secret_shares, nth_keys_data)
 
     """
     async with aiohttp.ClientSession() as session:
@@ -489,7 +494,8 @@ async def receive_secret(request, requester):
             raise errors.ApiInternalError("Maximum amount of rceive_secret \
                                 addresses limit reached")
 
-    data = await submit_receive_secret(request.app, user.org_state,
+    data = await submit_receive_secret(request.app, requester["user_id"],
+                    user.org_state,
                     requester_address, user.decrypted_mnemonic)
 
     return response.json(

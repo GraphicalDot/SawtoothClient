@@ -9,7 +9,7 @@ from addressing import addresser
 from protocompiled import payload_pb2
 from transactions.extended_batch import make_header_and_batch
 
-async def __send_share_mnemonic(**in_data):
+async def __send_share_secret(**in_data):
     """
 
     """

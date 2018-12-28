@@ -14,7 +14,7 @@ import hashlib
 from remotecalls import remote_calls
 from ledger import deserialize_state
 from errors import errors
-from .__send_share_mnemonic import __send_share_mnemonic
+from .__send_share_secret import __send_share_secret
 from addressing import addresser
 from routes import route_utils
 from encryption.utils import create_signer, encrypt_w_pubkey
@@ -33,29 +33,26 @@ coloredlogs.install()
 from protocompiled import payload_pb2
 
 from ledger.send_transaction import SendTransactions
-async def share_mnemonic_batch_submit(app, requester_address, user_id,
+
+async def share_secret_batch_submit(app, requester_address, requester,
                             user_accounts, secret_shares, nth_keys_data):
     """
     Args:
         requester_address(str): The user who is sharing his Mnemonic
-        user_id(str): user_id of the user who is sharing the Menmonic
-        user_accounts(list of dictionaies): The user accounts present on the
+        requester(dict): db entry of the user who is sharing the Menmonic
+        receive_secrets(list of dictionaies): The user accounts present on the
                             the blockchain with whom the user wants to share the mnemonic
-
         secret_shares(list of str): encrypted mnemonic shamir secret shares
         mth_keys_data(dict with keys as random indexes): The Pub/Priv key pairs
                     generated from the random indexes generated from the user mnemonic
                     who wants to share his/her mnemonic, the pub/priv keys are ecc keys
                     fetched from go_api
-
-    All the trasactions will be packaged into a batch and then will be sumitted to the ledger,
+    All the trasactions will be packaged into a batch and then will be submitted to the ledger,
     If one transaction fails, All transaction will fail as per the property
     of hyperledger sawtooth
-
     Output:
         True if all the trasactions in a batch will be submitted
         False if there is any error
-
     """
     async with aiohttp.ClientSession() as session:
         transactions = await asyncio.gather(*[
@@ -101,7 +98,7 @@ async def share_mnemonic_batch_submit(app, requester_address, user_id,
 
 
 
-async def submit_share_mnemonic(app, requester_address, account,
+async def submit_share_secret(app, requester_address, account,
                 secret_share, index, private_key):
 
     """
@@ -160,7 +157,6 @@ async def submit_share_mnemonic(app, requester_address, account,
                         "user_address": requester_address #because at the processing side
                                             ##user state needs to be appended with
                                             ##shared_asecret_address on their share_secret_addresses
-
                         }
 
 

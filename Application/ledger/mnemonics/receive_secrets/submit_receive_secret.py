@@ -10,7 +10,9 @@ from encryption.signatures import ecdsa_signature
 from encryption.utils import create_signer
 from addressing import addresser
 from protocompiled import payload_pb2
-
+from asyncinit import asyncinit
+from db import db_secrets
+from errors.errors import ApiInternalError
 """
 import time
 from db import accounts_query
@@ -33,7 +35,9 @@ from ledger import messaging
 from errors.errors import ApiBadRequest, ApiInternalError
 from db.share_mnemonic import store_share_mnemonics, update_shared_secret_array
 """
-async def submit_receive_secret(app, requester_state, requester_address, requester_mnemonic):
+
+async def submit_receive_secret(app, requester_user_id, requester_state,
+                                requester_address, requester_mnemonic):
 
     """
     Args:
@@ -60,7 +64,7 @@ async def submit_receive_secret(app, requester_state, requester_address, request
     ##to prove that this receive_secret has been created by the user himself,
     ##nonce must be signed by the zeroth private of the account
     nonce = random.randint(2**20, 2**30)
-    ##nonce signed by zerothprivate key and in hex format
+    ## nonce signed by zerothprivate key and in hex format
     signed_nonce = ecdsa_signature(zeroth_priv, nonce)
     nonce_hash= hashlib.sha512(str(nonce).encode()).hexdigest()
 
@@ -99,4 +103,46 @@ async def submit_receive_secret(app, requester_state, requester_address, request
                             "transaction": transaction,
                             "signed_nonce": signed_nonce.decode()})
 
+    db_instance = await DBReceiveSecret(app,
+                                    app.config.DATABASE["receive_secret"],
+                                    "receive_secret_idxs")
+
+    await db_instance.store_receive_secrets(requester_user_id, transaction_data)
+    await db_instance.update_user_receive_secret(requester_user_id, index)
+
     return transaction_data
+
+
+
+
+
+@asyncinit
+class DBReceiveSecret(object):
+    async def __init__(self, app, table_name, array_name):
+        #self.val = await self.deferredFn(param)
+        self.app = app
+        self.table_name = table_name
+        self.array_name = array_name
+        self.user_table = app.config.DATABASE["users"]
+
+    async def store_receive_secrets(self, user_id, data):
+        try:
+            result = await db_secrets.store_data(self.app, self.table_name, user_id, data)
+        except Exception as e:
+            msg = f"Storing receive secreates failed with an error {e}"
+            logging.error(msg)
+            raise ApiInternalError(msg)
+        logging.info(f"Store receive secret successful with messege {result}")
+        return result
+
+    async def update_user_receive_secret(self, user_id, index):
+        try:
+            result = await db_secrets.update_array_with_index(self.app, self.user_table,
+                            user_id, self.array_name, index)
+
+        except Exception as e:
+            msg = f"Updating receive secret array of user failed with {e}"
+            logging.error(msg)
+            raise ApiInternalError(msg)
+        logging.info(f"Updating  receive secret arr o user sucessful with {result}")
+        return result
