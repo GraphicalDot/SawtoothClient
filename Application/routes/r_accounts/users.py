@@ -299,6 +299,8 @@ async def share_mnemonic(request, requester):
     ##encrypt the mnemonic with this AES Key
     ##split the mnemonic, this way even if the user forgets its password, it can be
     ##decrypted using just his email
+    logging.info(nth_keys_data)
+
     kdf_salt_one, kdf_salt_two, secret_shares = split_mnemonic(user.org_db["email"],
                         user.decrypted_mnemonic, request.json["minimum_required"],
                         len(request.json["receive_secret_addresess"]))
@@ -322,18 +324,6 @@ async def share_mnemonic(request, requester):
     requester.update({"zeroth_private": requester_zero_priv})
     transactions = await share_secret_batch_submit(request.app, requester,
                 receive_secrets, secret_shares, nth_keys_data)
-
-    """
-    async with aiohttp.ClientSession() as session:
-        await asyncio.gather(*[
-            submit_share_mnemonic(request.app, requester_address, account, secret_share, int(index), nth_keys_data[index]["private_key"])
-
-            for (account, secret_share, index) in zip(user_accounts, secret_shares,
-                                        list(nth_keys_data.keys()))
-        ])
-    """
-
-    #await submit_share_mnemonic(request.app, requester, user_accounts)
     return response.json(
             {
             'error': False,

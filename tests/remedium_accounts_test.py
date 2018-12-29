@@ -273,7 +273,6 @@ async def test_get_receive_secrets_usr5():
 try:
     #asyncio.ensure_future(test_register_users())
     loop.run_until_complete(test_register_users())
-    #loop.run_until_complete(test_create_receive_secret())
     #loop.run_until_complete(test_create_receive_secret_usr2())
     #loop.run_until_complete(test_create_receive_secret_usr3())
     #loop.run_until_complete(test_create_receive_secret_usr4())
@@ -285,7 +284,7 @@ try:
     loop.run_until_complete(test_get_receive_secrets_usr3())
     loop.run_until_complete(test_get_receive_secrets_usr4())
     loop.run_until_complete(test_get_receive_secrets_usr5())
-    loop.run_until_complete(test_get_account())
+    #loop.run_until_complete(test_get_account())
 
     loop.run_until_complete(test_share_mnemonic())
 

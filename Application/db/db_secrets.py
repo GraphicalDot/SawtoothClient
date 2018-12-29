@@ -77,6 +77,20 @@ class DBSecrets(object):
         return await cursor_to_result(cursor)
 
 
+    async def find_public_idx(self, public, idx):
+        ##FInd an entry in the database on the basis of the public key and the
+        ##idx
+        try:
+            cursor= await r.table(self.table_name)\
+                .filter({"public": public, "idx": idx})\
+                .run(self.app.config.DB)
+
+        except ReqlNonExistenceError as e:
+            logging.error(f"Error in fetching {data} which is {e}")
+            raise ApiBadRequest(
+                f"Error in fetching entries from {self.table_name} {e}")
+
+        return await cursor_to_result(cursor)
 
 
 

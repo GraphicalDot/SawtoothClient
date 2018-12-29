@@ -10,7 +10,7 @@ import uuid
 import binascii
 from remotecalls.remote_calls import generate_mnemonic
 from ledger import deserialize_state
-from addressing import addresser
+from addressing import addresser, resolve_address
 from db import accounts_query
 from remotecalls import remote_calls
 
@@ -97,27 +97,52 @@ class ResolveAccount(aobject):
     async def generate_shared_secret_addr(self, number):
         """
         THis will generate shared_Secret addresses,
-        Number : int , total number of addresses that will be generated
-        """
+        First fetch if there are any already shared_secret_addresses
 
+        required = share_secret_addresses - number
+
+        Three cases arises:
+            1. User wants to increase the number of receivers then was already there
+                in this case, required will be negative
+            2. User wants to decrease the number of number of receivers, in this
+                case required will be positive
+            3. FIrst time required will be negative
+            4. THe number of same, required is ZERO
+        """
+        ##TODO: update share secret, for example in case 2 is valid, then
+        ##all the share_secret_address who arent participating must be made inactive
+
+
+        share_secret_addresses = self.org_state.get("share_secret_addresses")
+        try:
+            required = len(share_secret_addresses) - number
+        except TypeError as e:
+            logging.error(f"from Resolve account {e}")
+            required = number
         #shared_idxs = self.org_state.get("shared_secret")
         idxs = []
+        logging.info(f"Valur of required is {required}")
+        if required == 0:
+            ##this implies the the previousl share_secret_addresses are
+            ##equal to the reuqired right now
+            share_secrets = []
+            for addr in share_secret_addresses:
+                ins = await resolve_address.ResolveAddress(addr, self.app.config.REST_API_URL)
+                logging.info(addr)
+                logging.info(ins.address_type)
+                idxs.append(ins.data["idx"])
+        else:
+            for _ in range(0, number):
+                result = await route_utils.generate_key_index(idxs)
+                idxs.append(result)
+
+        logging.info(idxs)
+
         #if shared_idxs:
         #    idxs = shared_idxs
 
-        for _ in range(0, number):
-            result = await route_utils.generate_key_index(idxs)
-            idxs.append(result)
 
         return await remote_calls.key_index_keys(self.app, self.decrypted_mnemonic, idxs)
-
-
-        user_state = await deserialize_state.deserialize_user(
-                            self.app.config.REST_API_URL, user_address)
-
-        user_db = await accounts_query.find_on_key(self.app, "user_id",
-                                        user_state["user_id"])
-        return user_address, user_state, user_db
 
 
 

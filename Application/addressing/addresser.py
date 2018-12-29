@@ -87,7 +87,7 @@ def address_is(address):
         result = AddressSpace.RECEIVE_ASSET
 
     elif _contains(infix, SharedSecretSpace):
-        result = AddressSpace.SHARED_SECRET
+        result = AddressSpace.SHARE_SECRET
 
     elif _contains(infix, UserAccountSpace):
         result = AddressSpace.USER_ACCOUNT
@@ -129,7 +129,7 @@ class AddressSpace(enum.IntEnum):
     SHARE_ASSET = 1
     RECEIVE_ASSET = 2
     TRANSFER_ASSET = 3
-    SHARED_SECRET = 4
+    SHARE_SECRET = 4
     RECEIVE_SECRET =5
     USER_ACCOUNT = 6
     ORGANIZATION_ACCOUNT=7

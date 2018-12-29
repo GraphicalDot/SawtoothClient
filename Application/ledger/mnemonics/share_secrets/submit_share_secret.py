@@ -204,7 +204,8 @@ async def submit_share_secret(app, requester, requester_address, receive_secret,
     transaction_data.update({"transaction_id": transaction_id,
                             "transaction": transaction,
                             "share_secret_address": share_secret_address,
-                            "signed_nonce": signed_nonce.decode()})
+                            "signed_nonce": signed_nonce.decode(),
+                            "public": acc_signer.get_public_key().as_hex()})
 
     return transaction_data
 """
