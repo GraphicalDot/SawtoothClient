@@ -176,7 +176,7 @@ async def all_share_secrets(request, requester):
 
 
     logging.info(account)
-    floated = account.get("shared_secret")
+    floated = account.get("share_secret_addresses")
     floated_result = []
     if floated:
         #implies that user has already have created shared_secrets contracts and

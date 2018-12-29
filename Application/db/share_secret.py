@@ -46,7 +46,7 @@ async def get_addresses_on_ownership(app, owner_account_address):
     ##for toher users who want to update this shared_secret address with the reset_key
 
     try:
-        cursor= await r.table(app.config.DATABASE["share_mnemonic"])\
+        cursor= await r.table(app.config.DATABASE["share_secret"])\
             .filter({"ownership": owner_account_address})\
             .run(app.config.DB)
 
