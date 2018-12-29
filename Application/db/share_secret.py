@@ -14,49 +14,15 @@ coloredlogs.install()
 
 
 
-async def store_share_mnemonics(app, data):
-    if not await find_on_key(app, "user_id", data["user_id"]):
-        raise CustomError(f"This user account couldnt be found user_id <<{data['user_id']}>>")
-
-    try:
-        result = await r.table(app.config.DATABASE["share_mnemonic"])\
-            .insert(data).run(app.config.DB)
-
-    except ReqlNonExistenceError as e:
-        logging.error(f"Error in inserting {data} which is {e}")
-        raise ApiBadRequest(
-            f"Error in storing asset {e}")
-
-    logging.info(f"Storing share mnemonic transaction {data} successful")
-    return result
 
 
-async def update_shared_secret_array(app, user_id, array):
-    return await r.table(app.config.DATABASE["users"])\
-            .filter({"user_id": user_id})\
-            .update({"share_secret_addresses": array})\
-            .run(app.config.DB)
 
 
-async def get_shared_secret_array(app, user_id):
-
-    try:
-        cursor= await r.table(app.config.DATABASE["users"])\
-            .filter({"user_id": user_id})\
-            .pluck({"shared_secret"})\
-            .run(app.config.DB)
-
-    except ReqlNonExistenceError as e:
-        logging.error(f"Error in inserting {data} which is {e}")
-        raise ApiBadRequest(
-            f"Error in storing asset {e}")
-
-    return await cursor_to_result(cursor)
 
 
 async def update_share_mnemonic(app, trans):
-    return await r.table(app.config.DATABASE["share_mnemonic"])\
-            .filter({"user_id": trans["user_id"], "shared_secret_address": trans["share_secret_address"]})\
+    return await r.table(app.config.DATABASE["share_secret"])\
+            .filter({"user_id": trans["user_id"], "share_secret_address": trans["share_secret_address"]})\
             .update({"reset_key": trans["reset_key"].decode(),\
                     "updated_on": trans["timestamp"],
                     "active": True,

@@ -20,7 +20,7 @@ from addressing import addresser
 #from routes import route_utils
 from encryption.utils import create_signer
 
-from db.share_mnemonic import get_shared_secret_array, update_share_mnemonic
+#from db.share_secret import get_shared_secret_array, update_share_mnemonic
 
 
 #encrypt_w_pubkey

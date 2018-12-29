@@ -230,13 +230,12 @@ class AccountApis(aobject):
                                 data=json.dumps(user))
 
     @staticmethod
-    async def share_mnemonic(requester, email_list):
+    async def share_mnemonic(requester, receive_secret_addresess):
         headers = get_headers(requester["email"],
                         requester["password"])
 
-        data = {"email_list": email_list,
-                "total_shares": 4,
-                "minimum_required": 3, "password": requester["password"]}
+        data = {"receive_secret_addresess": receive_secret_addresess,
+                "minimum_required": 3}
         logging.info(headers)
         return requests.post(SHARE_MNEMONIC,
                                 data=json.dumps(data), headers=headers)

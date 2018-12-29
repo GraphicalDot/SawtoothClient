@@ -73,13 +73,14 @@ async def boilerplate_user_registration(user):
 
 
 
-async def boilerplate_share_mnemonic(user, email_list):
-    response = await AccountApis.share_mnemonic(user, email_list)
+async def boilerplate_share_mnemonic(user, receive_secret_addresess):
+    logging.info(f"Starting to execute share mnemonic by user {user}")
+    response = await AccountApis.share_mnemonic(user, receive_secret_addresess)
 
 
     ##if requster is a child, check whether the account have child_zero_pub or not
     if response.status_code == 200:
-        logging.info(f"Sharing menmonic of {user} with other user {email_list}")
+        logging.info(f"Sharing menmonic of {user} with other user {receive_secret_addresess}")
         # If the request is sent successfully, then I expect a response to be returned.
 
     elif response.status_code == 400:
@@ -190,7 +191,9 @@ async def test_register_users():
 
 
 async def test_share_mnemonic():
-    await boilerplate_share_mnemonic(user1, [user2["email"], user3["email"], user4["email"], user5["email"]])
+    logging.info(f"THis is receive_secret_addresses {receive_secret_addresses}")
+    await boilerplate_share_mnemonic(user1, [e[0] for e in receive_secret_addresses.values()])
+    logging.info(f"THis is receive_secret_addresses {receive_secret_addresses}")
 
 
 async def test_activate_mnemonic():
@@ -271,10 +274,10 @@ try:
     #asyncio.ensure_future(test_register_users())
     loop.run_until_complete(test_register_users())
     #loop.run_until_complete(test_create_receive_secret())
-    loop.run_until_complete(test_create_receive_secret_usr2())
-    loop.run_until_complete(test_create_receive_secret_usr3())
-    loop.run_until_complete(test_create_receive_secret_usr4())
-    loop.run_until_complete(test_create_receive_secret_usr5())
+    #loop.run_until_complete(test_create_receive_secret_usr2())
+    #loop.run_until_complete(test_create_receive_secret_usr3())
+    #loop.run_until_complete(test_create_receive_secret_usr4())
+    #loop.run_until_complete(test_create_receive_secret_usr5())
 
 
 
@@ -282,9 +285,9 @@ try:
     loop.run_until_complete(test_get_receive_secrets_usr3())
     loop.run_until_complete(test_get_receive_secrets_usr4())
     loop.run_until_complete(test_get_receive_secrets_usr5())
-    #loop.run_until_complete(test_get_account())
+    loop.run_until_complete(test_get_account())
 
-    #loop.run_until_complete(test_share_mnemonic())
+    loop.run_until_complete(test_share_mnemonic())
 
     #loop.run_until_complete(test_activate_mnemonic())
     #loop.run_until_complete(test_execute_share_mnemonic_2())

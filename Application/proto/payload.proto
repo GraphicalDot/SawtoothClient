@@ -97,18 +97,18 @@ message CreateShareSecret {
     string key=5;
     string role=6;
     uint32 idx=7;
-    string reset_key=9;
-    string created_on=10;
-    string updated_on=11;
-    bool executed=12; //Whether this has been executed in the present cycle after it was made active
-    string executed_on=13; //The last time the acceptor has executed this contract i.e
+    string reset_key=8;
+    string created_on=9;
+    string updated_on=10;
+    bool executed=11; //Whether this has been executed in the present cycle after it was made active
+    string executed_on=12; //The last time the acceptor has executed this contract i.e
                     //encrypted his allotted share with new reset key
-    uint32 num_executions=14; //number of times the acceptor has executed this contract
-    uint32 num_recoveries=15; //number of times the user has receovered his/her mnemonic
-    uint32 nonce=16;
-    string nonce_hash=17;
-    string signed_nonce=18;
-    string user_address=19;
+    uint32 num_executions=13; //number of times the acceptor has executed this contract
+    uint32 num_recoveries=14; //number of times the user has receovered his/her mnemonic
+    uint32 nonce=15;
+    string nonce_hash=16;
+    string signed_nonce=17;
+    string user_address=18;
 }
 
 
@@ -151,8 +151,10 @@ message CreateOrganizationAccount {
     repeated uint32	create_asset_idxs=13;
     repeated uint32	share_asset_idxs=14;
     repeated uint32	receive_asset_idxs=15;
+    repeated uint32 receive_secret_idxs = 16;
+    repeated string share_secret_addresses = 17;
 
-    string user_id=16;
+    string user_id=18;
 }
 
 

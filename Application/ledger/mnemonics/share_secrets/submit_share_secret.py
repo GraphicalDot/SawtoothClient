@@ -27,18 +27,18 @@ import binascii
 from ledger import messaging
 from errors.errors import ApiBadRequest, ApiInternalError
 from encryption.signatures import ecdsa_signature
-from db.share_mnemonic import store_share_mnemonics, update_shared_secret_array
 import coloredlogs, logging, json
 coloredlogs.install()
 from protocompiled import payload_pb2
 
 from ledger.send_transaction import SendTransactions
+from db.db_secrets import DBSecrets
 
-async def share_secret_batch_submit(app, requester_address, requester,
-                            user_accounts, secret_shares, nth_keys_data):
+
+async def share_secret_batch_submit(app, requester, receive_secrets,
+                                                secret_shares, nth_keys_data):
     """
     Args:
-        requester_address(str): The user who is sharing his Mnemonic
         requester(dict): db entry of the user who is sharing the Menmonic
         receive_secrets(list of dictionaies): The user accounts present on the
                             the blockchain with whom the user wants to share the mnemonic
@@ -54,12 +54,18 @@ async def share_secret_batch_submit(app, requester_address, requester,
         True if all the trasactions in a batch will be submitted
         False if there is any error
     """
+
+    if requester["role"] == "USER":
+        requester_address = addresser.user_address(requester["acc_zero_pub"], 0)
+    else:
+        logging.error("NOt implemented yet")
+
     async with aiohttp.ClientSession() as session:
         transactions = await asyncio.gather(*[
-              submit_share_mnemonic(app, requester_address,
-                        account, secret_share, int(index), nth_keys_data[index]["private_key"])
+              submit_share_secret(app, requester, requester_address,
+                        receive_secret, secret_share, int(index), nth_keys_data[index]["private_key"])
 
-            for (account, secret_share, index) in zip(user_accounts, secret_shares,
+            for (receive_secret, secret_share, index) in zip(receive_secrets, secret_shares,
                                         list(nth_keys_data.keys()))
         ])
 
@@ -78,9 +84,17 @@ async def share_secret_batch_submit(app, requester_address, requester,
     instance = await SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
     await instance.push_n_wait(batch_bytes, batch_id)
 
+
+
+    ##must be intialized
+    db_instance = await DBSecrets(app, table_name="share_secret",
+                                        array_name="share_secret_addresses",
+                                        )
+
+
     new_list = []
     for trans in transactions:
-        trans.update({"batch_id": batch_id, "user_id": user_id})
+        trans.update({"batch_id": batch_id, "user_id": requester["user_id"]})
         ##removing payload
         trans.pop("transaction")
         new_list.append(trans)
@@ -88,24 +102,35 @@ async def share_secret_batch_submit(app, requester_address, requester,
         #for transaction in transactions:
         #    transaction.update({"batch_id": batch_id, "user_id": user_id})
         #   [trasaction.pop(e) for e in "secret_key", "key", "secret_hash"]
-        f = await  store_share_mnemonics(app, trans)
-        logging.info(f)
+        await db_instance.store(requester["user_id"], trans)
+        await db_instance.update_array_with_value(
+                                requester["user_id"],
+                                trans.get("share_secret_address") )
     ##updating shared_secret array of the users present in the database,
     ##with the ownership key of every transaqction, address of the users
     ##to whoim these transaction were addressed.
-    await update_shared_secret_array(app, user_id, [_t["ownership"] for _t in new_list])
-    return True
+    return transactions
 
 
 
-async def submit_share_secret(app, requester_address, account,
+async def submit_share_secret(app, requester, requester_address, receive_secret,
                 secret_share, index, private_key):
 
     """
     Args:
-        requester_address(str): The user who wants to share the mnemonic
-        account(dict): The blockchain state of the user to whom this user wants to
-                share the mnemonic
+        requester(dict): The db entry of the user who wants to share the mnemonic
+        receive_secret(dict): The blockchain state of the receive_secret addr  to whom
+                this user wants to share the mnemonic
+                {'role': 'USER',
+                'active': True,
+                'created_on': '2018-12-28 19:59:14 IST+0530',
+                'nonce': 802584806,
+                'signed_nonce': '304402204b79ebf02b7.........',
+                'nonce_hash': '87b4e684b071956e5598b.........',
+                'idx': 1044988318,
+                'public': '026f914d49e6321f668139e75.........',
+                'address': 'a9d5c23e49419e21d9f5a2ef.........'}
+                address is added by deserialize_receive_secret function
         secret_share (str): One share of the encrypted mnemonic of the user out of many
             others which will be shared with the user represented by account.
         index(int): ranom index generated from the user mnemonic at which a new
@@ -115,6 +140,7 @@ async def submit_share_secret(app, requester_address, account,
         private_key(str): private key of the requested generated from its mnemonic
             present at the index.
     """
+
     acc_signer=create_signer(private_key)
 
 
@@ -132,17 +158,17 @@ async def submit_share_secret(app, requester_address, account,
     ##The AES_GCM encrypted file content
     encryptes_secret_share = binascii.hexlify(ciphertext).decode()
 
-    ##Encrypting AES key with the child public key, output will ne hex encoded
-    ##encryted AES key
-    encrypted_key = encrypt_w_pubkey(key, account["public"])
+    ##Encrypting AES key with the public key present at the receive_secret transaction,
+    ##output will ne hex encoded encryted AES key
+    encrypted_key = encrypt_w_pubkey(key, receive_secret["public"])
 
     nonce = random.randint(2**20, 2**30)
     ##nonce signed by zerothprivate key and in hex format
-    signed_nonce = ecdsa_signature(private_key, nonce)
+    signed_nonce = ecdsa_signature(requester["zeroth_private"], nonce)
     nonce_hash= hashlib.sha512(str(nonce).encode()).hexdigest()
 
 
-    transaction_data= {"ownership": account["address"],
+    transaction_data= {"ownership": receive_secret["address"],
                         "active": False,
                         "secret": encryptes_secret_share,
                         "key": encrypted_key,
@@ -153,36 +179,98 @@ async def submit_share_secret(app, requester_address, account,
                         "nonce": nonce,
                         "signed_nonce": signed_nonce,
                         "nonce_hash": nonce_hash,
-                        "ownership": account["address"],
                         "user_address": requester_address #because at the processing side
                                             ##user state needs to be appended with
                                             ##shared_asecret_address on their share_secret_addresses
                         }
 
 
-    shared_secret_address = addresser.shared_secret_address(
+    share_secret_address = addresser.shared_secret_address(
         acc_signer.get_public_key().as_hex(), index)
 
     ##both the inputs and outputs addresses will be the same
     ##requester addresss will be fetched from blockchain and checked if its exists
     ##and the shared_secret_addresses will be appended to its
-    addresses = [requester_address, shared_secret_address]
-    logging.info(f"addresses are {addresses}")
+    inputs = [requester_address, share_secret_address, receive_secret["address"]]
+    outputs = [requester_address, share_secret_address]
 
     payload = payload_pb2.CreateShareSecret(**transaction_data)
 
     instance = await SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
     transaction_id, transaction = await instance.share_mnemonic_transaction(
                             txn_key=acc_signer, batch_key=app.config.SIGNER,
-                            inputs=addresses, outputs=addresses, payload=payload)
+                            inputs=inputs, outputs=outputs, payload=payload)
 
     transaction_data.update({"transaction_id": transaction_id,
                             "transaction": transaction,
-                            "shared_secret_address": shared_secret_address,
+                            "share_secret_address": share_secret_address,
                             "signed_nonce": signed_nonce.decode()})
 
     return transaction_data
+"""
+
+@asyncinit
+class DBShareSecret(object):
+    async def __init__(self, app):
+        #self.val = await self.deferredFn(param)
+        ##array_name is the key in the user entry in users table
+        ##table_name could be any new table name, in this case it is
+        ##
+        self.app = app
+        self.table_name = app.config.DATABASE["share_secret"]
+        self.array_name = "share_secret_addresses"
+        self.user_table = app.config.DATABASE["users"]
+
+    async def store_share_secrets(self, user_id, data):
+        try:
+            result = await db_secrets.store_data(self.app, self.table_name, user_id, data)
+        except Exception as e:
+            msg = f"Storing receive secreates failed with an error {e}"
+            logging.error(msg)
+            raise ApiInternalError(msg)
+        logging.info(f"Store receive secret successful with messege {result}")
+        return result
+
+    async def update_user_share_secret_addresses(self, user_id, value):
+        try:
+            result = await db_secrets.update_array_with_index(self.app, self.user_table,
+                            user_id, self.array_name, value)
+
+        except Exception as e:
+            msg = f"Updating receive secret array of user failed with {e}"
+            logging.error(msg)
+            raise ApiInternalError(msg)
+        logging.info(f"Updating  receive secret arr o user sucessful with {result}")
+        return result
 
 
-async def share_mnemonic_db():
-    pass
+    async def get_array(self, user_id):
+
+        try:
+            cursor= await r.table(self.user_table)\
+                .filter({"user_id": user_id})\
+                .pluck({self.array_name})\
+                .run(self.app.config.DB)
+
+        except ReqlNonExistenceError as e:
+            logging.error(f"Error in inserting {data} which is {e}")
+            raise ApiBadRequest(
+                f"Error in storing asset {e}")
+
+        return await cursor_to_result(cursor)
+
+async def update_shared_secret_array(app, user_id, array):
+    return await r.table(app.config.DATABASE["users"])\
+            .filter({"user_id": user_id})\
+            .update({"share_secret_addresses": array})\
+            .run(app.config.DB)
+
+
+
+async def update_array_with_index(app, table_name, user_id, array_name, value):
+
+    return await r.table(table_name)\
+            .filter({"user_id": user_id})\
+            .update({array_name: r.row[array_name].append(value)})\
+            .run(app.config.DB)
+"""

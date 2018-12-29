@@ -4,13 +4,83 @@
 
 import rethinkdb as r
 from rethinkdb.errors import ReqlNonExistenceError
-from errors.errors import CustomError
+from errors.errors import CustomError, ApiInternalError
 from db.accounts_query import find_on_key, cursor_to_result
 
 
 
 import coloredlogs, logging
 coloredlogs.install()
+
+from asyncinit import asyncinit
+
+
+
+@asyncinit
+class DBSecrets(object):
+    async def __init__(self, app, table_name=None,
+                        array_name=None):
+        #self.val = await self.deferredFn(param)
+        ##array_name is the key in the user entry in users table
+        ##table_name could be any new table name, in this case it is
+        ##
+        self.app = app
+        self.table_name = self.app.config.DATABASE[table_name]
+        self.array_name = array_name
+        self.user_table = self.app.config.DATABASE["users"]
+
+    async def store(self, user_id, data):
+        if not await find_on_key(self.app, "user_id", user_id):
+            raise CustomError(f"This user account couldnt be found user_id <<{user_id}>>")
+
+        try:
+            result = await r.table(self.table_name)\
+                .insert(data).run(self.app.config.DB)
+
+        except ReqlNonExistenceError as e:
+            msg = f"Storing {self.table_name} failed with an error {e}"
+            logging.error(msg)
+            raise ApiInternalError(msg)
+
+        logging.info(f"Store {self.table_name} successful with messege {result}")
+        return result
+
+
+    async def update_array_with_value(self, user_id, value):
+        try:
+            result = await r.table(self.user_table)\
+                .filter({"user_id": user_id})\
+                .update({self.array_name: r.row[self.array_name].append(value)})\
+                .run(self.app.config.DB)
+
+        except Exception as e:
+            msg = f"Updating {self.table_name} array of user failed with {e}"
+            logging.error(msg)
+            raise ApiInternalError(msg)
+        logging.info(f"Updating {self.array_name} array user sucessful with {result}")
+        return result
+
+
+    async def get_array(self, user_id):
+
+        try:
+            cursor= await r.table(self.user_table)\
+                .filter({"user_id": user_id})\
+                .pluck({self.array_name})\
+                .run(self.app.config.DB)
+
+        except ReqlNonExistenceError as e:
+            logging.error(f"Error in fetching {data} which is {e}")
+            raise ApiBadRequest(
+                f"Error in fetching entries from {self.table_name} {e}")
+
+        return await cursor_to_result(cursor)
+
+
+
+
+
+
 
 
 
@@ -31,15 +101,11 @@ async def store_data(app, table_name, user_id, data):
     return result
 
 
-async def update_array_with_index(app, table_name, user_id, array_name, index):
+async def update_array_with_index(app, table_name, user_id, array_name, value):
 
-    logging.info(table_name)
-    logging.info(user_id)
-    logging.info(array_name)
-    logging.info(index)
     return await r.table(table_name)\
             .filter({"user_id": user_id})\
-            .update({array_name: r.row[array_name].append(index)})\
+            .update({array_name: r.row[array_name].append(value)})\
             .run(app.config.DB)
 
 

@@ -15,7 +15,7 @@ import binascii
 from sanic import response
 from errors import errors
 import db.accounts_query as accounts_db
-from db.share_mnemonic import get_addresses_on_ownership, update_mnemonic_encryption_salt
+from db.share_secret import get_addresses_on_ownership, update_mnemonic_encryption_salt
 import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
@@ -254,7 +254,7 @@ async def share_mnemonic(request, requester):
     ##users has to make sure that these receive_secret_addrs must belong to
     ##different users, Otherwise a same user can join the secrets and brute forse the scrypt
     ##key generated from their email address and decrypt the joined mnemonic
-    required_fields = ["receive_secret_addrs", "minimum_required"]
+    required_fields = ["receive_secret_addresess", "minimum_required"]
 
     validate_fields(required_fields, request.json)
 
@@ -262,22 +262,18 @@ async def share_mnemonic(request, requester):
         raise errors.CustomError("To share passwords minimum 3 users are required")
 
     ##check whether all the receive_secret_addrs are valid
-    for addr in receive_secret_addrs:
+    for addr in request.json["receive_secret_addresess"]:
         try:
-            if "RECEIVE_SECRET" != addresser.address_is(element)[0]:
+            if "RECEIVE_SECRET" != addresser.address_is(addr)[0]:
                 raise ApiInternalError("Not a receive_secret address")
         except Exception as e:
             logging.error(e)
             logging.error("Unknown addresses Type")
             raise errors.ApiInternalError("Unknown addresses Type")
 
+    ##TODO, check whether the receive_secret_addresses has any address
+    ##which belongs to the user himself/herself.
 
-    if requester["role"] == "USER":
-        requester_address = addresser.user_address(requester["acc_zero_pub"], 0)
-    else:
-        ##handle case for organization
-        pass
-    ##fecth all accounts present in the email_list from the users table in database
 
 
     ##make all account addresses for all accounts present in the database
@@ -286,7 +282,7 @@ async def share_mnemonic(request, requester):
         receive_secrets= await asyncio.gather(*[
             deserialize_state.deserialize_receive_secret(
                             request.app.config.REST_API_URL, address)
-                 for address in request.json["receive_secret_addrs"]
+                 for address in request.json["receive_secret_addresess"]
         ])
 
     ##resolving account for the requester to get his decrypted menmonic
@@ -296,7 +292,8 @@ async def share_mnemonic(request, requester):
     ##On the basis of the length of user_accounts, generate random indexes
     ## from the mnemonic and get the PUBlic/private keys corresponding to these
     ##indxs, these, these addresses will be appended to the
-    nth_keys_data = await user.generate_shared_secret_addr(len(user_accounts))
+    nth_keys_data = await user.generate_shared_secret_addr(
+                                len(request.json["receive_secret_addresess"]))
 
     ##Generate scrypt key from the email and a random salt
     ##encrypt the mnemonic with this AES Key
@@ -304,7 +301,7 @@ async def share_mnemonic(request, requester):
     ##decrypted using just his email
     kdf_salt_one, kdf_salt_two, secret_shares = split_mnemonic(user.org_db["email"],
                         user.decrypted_mnemonic, request.json["minimum_required"],
-                        len(request.json["email_list"]))
+                        len(request.json["receive_secret_addresess"]))
 
 
     ##upadting user entry in the users table with the salt which was used in
@@ -312,7 +309,18 @@ async def share_mnemonic(request, requester):
     await update_mnemonic_encryption_salt(request.app, requester["user_id"],
         binascii.hexlify(kdf_salt_one).decode(), binascii.hexlify(kdf_salt_two).decode())
     #index = list(nth_keys_data.keys())[0]
-    await share_secret_batch_submit(request.app, requester_address, requester,
+
+    ##all the share_secret transaction nonce will be signed by the xeroth
+    #private key of the requester so that its authenticatn can be checked
+    ##getting zeroth private key of the user
+    nth_keys = await remote_calls.key_index_keys(request.app,
+                user.decrypted_mnemonic, [0])
+
+    requester_zero_priv =  nth_keys[str(0)]["private_key"]
+
+    ##updating requester data dict with zeroth private key of the requester
+    requester.update({"zeroth_private": requester_zero_priv})
+    transactions = await share_secret_batch_submit(request.app, requester,
                 receive_secrets, secret_shares, nth_keys_data)
 
     """
@@ -330,7 +338,7 @@ async def share_mnemonic(request, requester):
             {
             'error': False,
             'success': True,
-            "data": friends
+            "data": transactions
             })
 
 
