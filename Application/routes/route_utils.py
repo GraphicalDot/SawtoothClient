@@ -268,20 +268,23 @@ async def new_user_account(app, pancard=None, phone_number=None, email=None,
 
 
 
-async def send_message(app, user_id, phone_number, validity):
-    mobile_otp = random.randint(100000,999999)
-    msg = 'Hi, %s this is your otp %s' %(user_id, mobile_otp)
+async def send_message(app, user_id, user_name, phone_number, validity):
+    logging.info("SEnding message to user through SNS")
+    mobile_otp = random.randint(100000, 999999)
+    msg = 'Message from Remedium, \
+        Hello %s, \
+        This is your otp for forgot_password %s'%(user_name, mobile_otp)
     #client = boto3.client('sns','eu-west-1')
 
     client = boto3.client(
         "sns",
-        aws_access_key_id='AKIAJIZ2AR2TSXLGCH5A',
-        aws_secret_access_key='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',
+        aws_access_key_id='AKIAJE43I3IPMJHTEAEA',
+        aws_secret_access_key='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',
         region_name="us-west-2"
         )
 
     logging.info("This is the phone number on which OTP isbeing sent +91-%s"%phone_number)
-    client.publish(PhoneNumber="91%s"%phone_number,
+    client.publish(PhoneNumber="+91%s"%phone_number,
                 Message=msg,
                  MessageAttributes={
                  'AWS.SNS.SMS.SMSType': {

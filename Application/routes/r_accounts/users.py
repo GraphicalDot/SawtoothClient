@@ -21,7 +21,7 @@ import re
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
 from ledger.accounts.user_account.submit_user_account import submit_user_account
 from ledger.mnemonics.share_secrets.submit_share_secret import share_secret_batch_submit
-from ledger.mnemonics.activate_shares.submit_activate_shares import activate_shares_batch_submit
+from ledger.mnemonics.activate_secret.submit_activate_secret import activate_secret_batch_submit
 from ledger.mnemonics.execute_shared_mnemonic.submit_execute_share_mnemonic import submit_execute_share_mnemonic
 from ledger.mnemonics.receive_secrets.submit_receive_secret import submit_receive_secret
 
@@ -373,7 +373,9 @@ async def forgot_password(request):
                         request.app.config.REST_API_URL,
                         address)
 
-        await activate_shares_batch_submit(request.app, account_db, request.json["new_password"])
+        logging.info(state)
+
+        await activate_secret_batch_submit(request.app, account_db, request.json["new_password"])
     elif account_db["role"] == "ORGANIZATION":
         address = addresser.organization_address(account_db["acc_zero_pub"], 0)
 
@@ -452,6 +454,7 @@ async def get_otp(request):
                     validity, "Recovery OTP from Remedium", recovery=True)
 
     await send_message(request.app, account_db["user_id"],
+                account_db["first_name"]+" " +account_db["last_name"] ,
                     request.json["phone_number"], validity)
 
     return response.json(

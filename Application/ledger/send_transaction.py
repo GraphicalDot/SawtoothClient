@@ -157,6 +157,36 @@ class SendTransactions(object):
         return request_json
 
 
+@asyncinit
+class SendActivateSecret(SendTransactions):
+    async def __init__(self,  rest_api_url, timeout):
+        await super().__init__(rest_api_url, timeout)
+
+    async def create_activate_secret(self, txn_key=False, batch_key=False,
+                                    inputs=False, outputs=False, payload=False):
+        payload = payload_pb2.TransactionPayload(
+            payload_type=payload_pb2.TransactionPayload.ACTIVATE_SECRET,
+            activate_secret=payload)
+
+
+        return   make_header_and_transaction(
+                                            payload=payload,
+                                            inputs=inputs,
+                                            outputs=outputs,
+                                            txn_key=txn_key,
+                                            batch_key=batch_key)
+
+
+    async def push_batch(self, transactions, batch_signer):
+        batch_id, batch_bytes = self.multiple_transactions_batch(
+                        [e["transaction"] for e in transactions], batch_signer)
+
+        await self.push_n_wait(batch_bytes, batch_id)
+        return batch_id, batch_bytes
+
+
+
+
 
 @asyncinit
 class SendReceiveSecret(SendTransactions):

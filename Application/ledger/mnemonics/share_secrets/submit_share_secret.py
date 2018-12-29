@@ -14,7 +14,6 @@ import hashlib
 from remotecalls import remote_calls
 from ledger import deserialize_state
 from errors import errors
-from .__send_share_secret import __send_share_secret
 from addressing import addresser
 from routes import route_utils
 from encryption.utils import create_signer, encrypt_w_pubkey
@@ -208,70 +207,3 @@ async def submit_share_secret(app, requester, requester_address, receive_secret,
                             "public": acc_signer.get_public_key().as_hex()})
 
     return transaction_data
-"""
-
-@asyncinit
-class DBShareSecret(object):
-    async def __init__(self, app):
-        #self.val = await self.deferredFn(param)
-        ##array_name is the key in the user entry in users table
-        ##table_name could be any new table name, in this case it is
-        ##
-        self.app = app
-        self.table_name = app.config.DATABASE["share_secret"]
-        self.array_name = "share_secret_addresses"
-        self.user_table = app.config.DATABASE["users"]
-
-    async def store_share_secrets(self, user_id, data):
-        try:
-            result = await db_secrets.store_data(self.app, self.table_name, user_id, data)
-        except Exception as e:
-            msg = f"Storing receive secreates failed with an error {e}"
-            logging.error(msg)
-            raise ApiInternalError(msg)
-        logging.info(f"Store receive secret successful with messege {result}")
-        return result
-
-    async def update_user_share_secret_addresses(self, user_id, value):
-        try:
-            result = await db_secrets.update_array_with_index(self.app, self.user_table,
-                            user_id, self.array_name, value)
-
-        except Exception as e:
-            msg = f"Updating receive secret array of user failed with {e}"
-            logging.error(msg)
-            raise ApiInternalError(msg)
-        logging.info(f"Updating  receive secret arr o user sucessful with {result}")
-        return result
-
-
-    async def get_array(self, user_id):
-
-        try:
-            cursor= await r.table(self.user_table)\
-                .filter({"user_id": user_id})\
-                .pluck({self.array_name})\
-                .run(self.app.config.DB)
-
-        except ReqlNonExistenceError as e:
-            logging.error(f"Error in inserting {data} which is {e}")
-            raise ApiBadRequest(
-                f"Error in storing asset {e}")
-
-        return await cursor_to_result(cursor)
-
-async def update_shared_secret_array(app, user_id, array):
-    return await r.table(app.config.DATABASE["users"])\
-            .filter({"user_id": user_id})\
-            .update({"share_secret_addresses": array})\
-            .run(app.config.DB)
-
-
-
-async def update_array_with_index(app, table_name, user_id, array_name, value):
-
-    return await r.table(table_name)\
-            .filter({"user_id": user_id})\
-            .update({array_name: r.row[array_name].append(value)})\
-            .run(app.config.DB)
-"""

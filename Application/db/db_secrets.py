@@ -93,6 +93,15 @@ class DBSecrets(object):
         return await cursor_to_result(cursor)
 
 
+    async def update_reset_key(self, app, transaction):
+        return await r.table(self.table_name)\
+            .filter({"user_id": trans["user_id"], "share_secret_address": trans["share_secret_address"]})\
+            .update({"reset_key": trans["reset_key"].decode(),\
+                    "updated_on": trans["timestamp"],
+                    "active": True,
+                    "reset_bare_key": transaction["key"],
+                    "reset_salt": transaction["salt"]})\
+            .run(app.config.DB)
 
 
 
