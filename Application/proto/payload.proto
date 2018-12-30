@@ -64,7 +64,7 @@ message CreateReceiveSecret {
 
 
 message CreateExecuteShareSecret {
-    string shared_secret_address=1;
+    string share_secret_address=1;
     string reset_secret=2;
     string timestamp=7;
     uint32 nonce=3;

@@ -401,8 +401,6 @@ async def forgot_password(request):
     This api will be used when the user forgot their password
     and they have chosed the second option where they have stored their mnemonic
     with other users on the blockchain.
-
-
     """
 
     required_fields = ["email", "otp_email", "phone_number", "otp_mobile", "new_password"]

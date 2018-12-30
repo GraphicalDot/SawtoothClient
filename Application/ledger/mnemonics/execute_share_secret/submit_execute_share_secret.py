@@ -64,8 +64,8 @@ async def submit_execute_share_secret(app, requester, receive_secret_address,
     ##Now we have to decrypt the new aes key which user has updated as reset_key
     ##in this contract
     ##It was also encrypted with the public key of the account address
-
     de_reset_key = priv_decrypt(binascii.unhexlify(reset_key), private)
+
 
 
 
@@ -88,7 +88,7 @@ async def submit_execute_share_secret(app, requester, receive_secret_address,
     acc_signer=create_signer(private)
 
 
-    transaction_data= {"shared_secret_address": shared_secret_state["address"],
+    transaction_data= {"share_secret_address": shared_secret_state["address"],
                         "reset_secret": binascii.hexlify(secret),
                         "timestamp": indian_time_stamp(),
                         "nonce": nonce,
@@ -97,7 +97,7 @@ async def submit_execute_share_secret(app, requester, receive_secret_address,
                         }
 
 
-    addresses = [shared_secret_state["ownership"], receive_secret_address]
+    addresses = [shared_secret_state["address"], receive_secret_address]
     logging.info(f"addresses are {addresses}")
 
     payload = payload_pb2.CreateExecuteShareSecret(**transaction_data)
