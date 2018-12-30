@@ -88,12 +88,7 @@ async def activate_secret_batch_submit(app, requester, password):
         ])
 
 
-    logging.info(transactions)
-
     instance = await SendActivateSecret(app.config.REST_API_URL, app.config.TIMEOUT)
-
-
-
     batch_id, batch_list_bytes = await instance.push_batch([e["transaction"] for e in transactions], app.config.SIGNER)
 
 

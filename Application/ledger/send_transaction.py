@@ -213,6 +213,6 @@ class SendReceiveSecret(SendTransactions):
         #if not await self.wait_for_status(batch_id):
         #        raise errors.ApiInternalError("The batch couldnt be submitted")
 
-        batch_bytes, batch_id = transactions_batch([transaction], batch_key)
+        batch_id, batch_bytes = transactions_batch([transaction], batch_key)
         await self.push_n_wait(batch_bytes, batch_id)
         return transaction_id, batch_id
