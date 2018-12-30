@@ -34,6 +34,7 @@ from addressing import addresser
 from encryption import asymmetric
 from encryption import symmetric
 from encryption import signatures
+from encryption import key_derivations
 import aiohttp
 import asyncio
 import datetime
@@ -41,6 +42,7 @@ from encryption.split_secret import split_mnemonic, combine_mnemonic
 from ledger import deserialize_state
 from routes.resolve_account import ResolveAccount
 from ledger import deserialize_state
+from db.db_secrets import DBSecrets
 import coloredlogs, logging
 coloredlogs.install()
 
@@ -201,6 +203,79 @@ async def all_share_secrets(request, requester):
             })
 
 
+@USERS_BP.post('/recover_mnemonic')
+@authorized()
+async def recover_mnemonic(request, requester):
+    """
+
+    Result will have two keys,
+    floated and received,
+    floated will have all the shared_secret addresses that this user have floated
+    and have his encryptes mnemonic distribution
+
+    the received is all the shared_Secret_addresses that have shared with him,
+    This information can only be pulled from database right now but
+    sawtooth events will be used later
+    """
+
+    required_fields = ["password"]
+    validate_fields(required_fields, request.json)
+    if requester["role"] == "USER":
+        address = addresser.user_address(requester["acc_zero_pub"], 0)
+        account = await deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
+
+    else:
+        logging.error("Not implemented yet")
+        raise errors.ApiInternalError("This functionality is not implemented yet")
+
+
+
+    logging.info(account)
+    floated = account.get("share_secret_addresses")
+    async with aiohttp.ClientSession() as session:
+        share_secrets= await asyncio.gather(*[
+            deserialize_state.deserialize_share_secret(
+                    request.app.config.REST_API_URL, address)
+                for address in floated
+        ])
+
+    ##TODO: if minimum _requires is satisfied
+    db_instance = await DBSecrets(request.app, table_name="share_secret",
+                                            array_name="share_secret_addresses",
+                                            )
+
+
+
+    new_list = []
+    for share_secret in share_secrets:
+        _d = await db_instance.get_fields( "share_secret_address",
+                share_secret["address"],
+                ["reset_key", "reset_bare_key", "reset_salt", "share_secret_address"])
+        _d.update({"reset_secret": share_secret["reset_secret"]})
+        new_list.append(_d)
+
+    #logging.info(new_list)
+
+    
+    one = new_list[0]
+    logging.info(one)
+    one_salt = binascii.unhexlify(one["reset_salt"])
+    reset_secret = binascii.unhexlify(one["reset_secret"])
+    scrypt_key, _ = key_derivations.generate_scrypt_key(request.json["password"], 1, salt=one_salt)
+    logging.info(binascii.hexlify(scrypt_key))
+
+    de_org_secret = symmetric.aes_decrypt(scrypt_key, reset_secret)
+    logging.info(de_org_secret)
+
+    #received_result =await get_addresses_on_ownership(request.app, address)
+
+
+
+    return response.json(
+            {
+            'error': False,
+            'success': True,
+            })
 
 
 @USERS_BP.post('/share_secrets_on_receive_address')

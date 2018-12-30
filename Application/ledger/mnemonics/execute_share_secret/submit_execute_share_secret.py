@@ -109,10 +109,10 @@ async def submit_execute_share_secret(app, requester, receive_secret_address,
 
 
     logging.info(transaction_data)
-    transaction_ids, batch_id = await __send_execute_share_mnemonic(**transaction_data)
+    #transaction_ids, batch_id = await __send_execute_share_mnemonic(**transaction_data)
+    """
 
     if transaction_ids:
-        """
         logging.info("Execute share secret Transaction has been created successfully")
         ##which imlies the transaction has been submitted successfully,
         ##now all the changes that are required to be done on the databse can
@@ -147,7 +147,7 @@ async def submit_execute_share_secret(app, requester, receive_secret_address,
 
 
         return share_asset_address
-        """
     else:
         return False
+    """
     return

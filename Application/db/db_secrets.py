@@ -92,6 +92,23 @@ class DBSecrets(object):
 
         return await cursor_to_result(cursor)
 
+    async def get_fields(self, name, value, array):
+        """
+        Pluck the fields present in the array
+        """
+
+        try:
+            cursor= await r.table(self.table_name)\
+                .filter({name: value})\
+                .pluck(array)\
+                .run(self.app.config.DB)
+
+        except ReqlNonExistenceError as e:
+            logging.error(f"Error in fetching {data} which is {e}")
+            raise ApiBadRequest(
+                f"Error in fetching entries from {self.table_name} {e}")
+
+        return await cursor_to_result(cursor)
 
     async def update_reset_key(self, app, trans):
         return await r.table(self.table_name)\
