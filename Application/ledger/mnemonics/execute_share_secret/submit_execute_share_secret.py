@@ -12,27 +12,46 @@ from encryption.symmetric import aes_decrypt, aes_encrypt
 from encryption.asymmetric import priv_decrypt
 from encryption.signatures import ecdsa_signature
 from routes.route_utils import indian_time_stamp
+from ledger.send_transaction import SendExecuteSecret
+from protocompiled import payload_pb2
 
-async def submit_execute_share_secret(app, requester, shared_secret_state):
+async def submit_execute_share_secret(app, requester, receive_secret_address,
+                    shared_secret_state, private, public):
+    """
+    app(dict): configuration of the whole application
+    requester(dict): database entry of the user who requested this api, i.e who tries to
+            execute a share_Secret transactions shared with him on his receive_secret
+            transaction
+    share_secret_state(dict): Blcokchain state of the share_secret tansaction
+        which will be executed by this user
+    private(hex encoded string): Private key of the requester with whom the
+        receive secret transaction was created, this private was generaed from the idx
+        mentioned in the receive_secret transaction from the requester mnemonic
 
-    logging.info(shared_secret_state)
-    user = await ResolveAccount(requester, app)
+    public(hex encoded string): corresponding public of the private
 
-    nth_keys = await remote_calls.key_index_keys(app,
-                            user.decrypted_mnemonic, [0])
+    Process:
+        share_secret transaction has three keys ,
+            key: hex encoded AES key encrypted with the public key of the requester
+            secret: hex encoded shamir secret share encrypted with the AES key
+                    mentioned above
+            reset_key: The new hex encoded key generated from the users new_password
+                this is also encrypted with requester public key.
 
-    requester_zero_priv = nth_keys[str(0)]["private_key"]
-    requester_zero_pub = nth_keys[str(0)]["public_key"]
-
+    Step1: decrypt hex encoded KEY (AES) with private key
+    Step2: decrypt unhexlified secret with AES key from step1.
+    Step3: decrypt unhexlified reset_key with private_key
+    Step4: Encrypt Secret with reset_key
+    """
 
     secret = shared_secret_state["secret"] ##encrypted secret with AES key i.e key
     reset_key =shared_secret_state["reset_key"] ##new aes key which will be
                                     #used to encrypt the secret after decryption
     key = shared_secret_state["key"] #THE aes key which was oriniginally used to encrypt secret
 
-    ##the key is hex encoed but this function will first dehelify it and then
+    ##the key is hex encoed but this function will first dehexlify it and then
     ## decrypt with private key
-    de_org_key = decrypt_w_privkey(key, requester_zero_priv)
+    de_org_key = decrypt_w_privkey(key, private)
 
     #this orginal AES key de_org_key will be in bytes
 
@@ -46,7 +65,7 @@ async def submit_execute_share_secret(app, requester, shared_secret_state):
     ##in this contract
     ##It was also encrypted with the public key of the account address
 
-    de_reset_key = priv_decrypt(binascii.unhexlify(reset_key), requester_zero_priv)
+    de_reset_key = priv_decrypt(binascii.unhexlify(reset_key), private)
 
 
 
@@ -64,23 +83,32 @@ async def submit_execute_share_secret(app, requester, shared_secret_state):
 
     nonce = random.randint(2**20, 2**30)
     ##nonce signed by zerothprivate key and in hex format
-    signed_nonce = ecdsa_signature(requester_zero_priv, nonce)
+    signed_nonce = ecdsa_signature(private, nonce)
     nonce_hash= hashlib.sha512(str(nonce).encode()).hexdigest()
-    acc_signer=create_signer(requester_zero_priv)
+    acc_signer=create_signer(private)
 
 
-    transaction_data= {"config": app.config,
-                        "txn_key": acc_signer,
-                        "batch_key": app.config.SIGNER,
-                        "shared_secret_address": shared_secret_state["address"],
-                        "secret": binascii.hexlify(secret),
+    transaction_data= {"shared_secret_address": shared_secret_state["address"],
+                        "reset_secret": binascii.hexlify(secret),
                         "timestamp": indian_time_stamp(),
-                        "ownership": shared_secret_state["ownership"],
                         "nonce": nonce,
                         "nonce_hash": nonce_hash,
                         "signed_nonce": signed_nonce,
                         }
 
+
+    addresses = [shared_secret_state["ownership"], receive_secret_address]
+    logging.info(f"addresses are {addresses}")
+
+    payload = payload_pb2.CreateExecuteShareSecret(**transaction_data)
+
+    instance = await SendExecuteSecret(app.config.REST_API_URL, app.config.TIMEOUT)
+    transaction_id, batch_id = await instance.push_receive_secret(
+                            txn_key=acc_signer, batch_key=app.config.SIGNER,
+                            inputs=addresses, outputs=addresses, payload=payload)
+
+
+    logging.info(transaction_data)
     transaction_ids, batch_id = await __send_execute_share_mnemonic(**transaction_data)
 
     if transaction_ids:

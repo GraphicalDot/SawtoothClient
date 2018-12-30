@@ -270,26 +270,30 @@ async def execute_shared_secret(request, requester):
         logging.error("Ownership of SHARE_SECRET is not with this RECEIVE_SECRET")
 
 
+    if not share_secret.data["active"]:
+        raise errors.ApiInternalError("This SHARE_SECRET contract is not active")
     ##CHecking if this receive secret is actually belongs to this user
     ##this will checked by getting Public/Private key pair at idx of receiv secret
     ##from the requester mnemonic
-    """
-    address = addresser.user_address(requester["acc_zero_pub"], 0)
+    user = await ResolveAccount(requester, request.app)
+    requester_mnemonic = user.decrypted_mnemonic
 
-    if instance.data["ownership"] != address:
-        raise errors.ApiInternalError("This user doesnt own this SHARE_SECRET contract address")
+    logging.info(requester_mnemonic)
+    index = receive_secret.data["idx"]
+    nth_keys = await remote_calls.key_index_keys(request.app, requester_mnemonic,
+                                                        [index, 0])
+
+    nth_priv, nth_pub = nth_keys[str(index)]["private_key"], \
+                        nth_keys[str(index)]["public_key"]
+
+    if nth_pub != receive_secret.data["public"]:
+        logging.error("RECEIVE_SECRET doesnt belong to the requester")
     else:
-        logging.info("User owns this SHARE_SECRET")
+        logging.info("RECEIVE_SECRET ownership lies with the requester")
 
 
-    if not instance.data["active"]:
-        raise errors.ApiInternalError("This SHARE_SECRET contract is not active")
-    else:
-
-        logging.info(f" {instance.data['active']}SHARE_SECRET is active i.e requires execution by the uesr")
-
-    await submit_execute_share_mnemonic(request.app, requester, instance.data)
-    """
+    await submit_execute_share_secret(request.app, requester, request.json["receive_secret_address"],
+                    share_secret.data, nth_priv, nth_pub)
     return response.json(
             {
             'error': False,
