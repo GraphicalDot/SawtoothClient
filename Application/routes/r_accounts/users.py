@@ -230,7 +230,6 @@ async def recover_mnemonic(request, requester):
 
 
 
-    logging.info(account)
     floated = account.get("share_secret_addresses")
     async with aiohttp.ClientSession() as session:
         share_secrets= await asyncio.gather(*[
@@ -244,8 +243,6 @@ async def recover_mnemonic(request, requester):
                                             array_name="share_secret_addresses",
                                             )
 
-
-
     new_list = []
     for share_secret in share_secrets:
         _d = await db_instance.get_fields( "share_secret_address",
@@ -256,20 +253,30 @@ async def recover_mnemonic(request, requester):
 
     #logging.info(new_list)
 
-    
-    one = new_list[0]
-    logging.info(one)
-    one_salt = binascii.unhexlify(one["reset_salt"])
-    reset_secret = binascii.unhexlify(one["reset_secret"])
-    scrypt_key, _ = key_derivations.generate_scrypt_key(request.json["password"], 1, salt=one_salt)
-    logging.info(binascii.hexlify(scrypt_key))
+    shares = []
+    for one in new_list:
+        one_salt = binascii.unhexlify(one["reset_salt"])
+        reset_secret = binascii.unhexlify(one["reset_secret"])
+        scrypt_key, _ = key_derivations.generate_scrypt_key(request.json["password"], 1, salt=one_salt)
+        logging.info(binascii.hexlify(scrypt_key))
 
-    de_org_secret = symmetric.aes_decrypt(scrypt_key, reset_secret)
-    logging.info(de_org_secret)
-
+        de_org_secret = symmetric.aes_decrypt(scrypt_key, reset_secret)
+        logging.info(de_org_secret)
+        shares.append(de_org_secret)
     #received_result =await get_addresses_on_ownership(request.app, address)
 
+    logging.info(shares[0:3])
+    salt_one = binascii.unhexlify(requester["org_mnemonic_encryption_salt_one"])
+    salt_two = binascii.unhexlify(requester["org_mnemonic_encryption_salt_two"])
 
+    fucks = combine_mnemonic(requester["email"], shares, salt_one, salt_two)
+    decrypted_mnemonic =  encryption_utils.decrypt_mnemonic_privkey(
+            requester["encrypted_admin_mnemonic"],
+            request.app.config.ADMIN_ZERO_PRIV)
+
+
+    logging.info(fucks)
+    logging.info(decrypted_mnemonic)
 
     return response.json(
             {

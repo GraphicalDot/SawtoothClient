@@ -52,18 +52,26 @@ def split_mnemonic(email, mnemonic, minimum_required, total_shares):
     #SecretSharer.split_secret("c4bbcb1fbec99d65bf59d85c8cb62ee2db963f0fe106f483d9afa73bd4e39a8a", 2, 3)
 
 
-def combine_mnemonic(email, shares, salt):
+def combine_mnemonic(email, shares, salt_one, salt_two):
     ##ARGs:
     ##      shares:str must be a list of shamir secrets,
     ##              must be minimum required when secrets were created
     ##generating scrypt key on the basis of email and salt
-    keys, _ = key_derivations.generate_scrypt_key(
-                                    email, 1, salt=salt)
+
+
+    key1, _ = key_derivations.generate_scrypt_key(
+                                    email, 1, salt=salt_one)
+
+    ##Encypting mnemonic with AES key genearted from scrypt key
+    ##generated from the email
+    key2, _ = key_derivations.generate_scrypt_key(
+                                key1, 1, salt=salt_two)
+
 
     sss = sssa()
     ##Combining all the shamir secrets, this will fail if the minimum secrets
     ##requirement will not be fulfilled
     secret = sss.combine(shares)
     unhexlified_secret = binascii.unhexlify(secret)
-    mnemonic = aes_decrypt(keys, unhexlified_secret)
+    mnemonic = aes_decrypt(key2, unhexlified_secret)
     return mnemonic.decode()
