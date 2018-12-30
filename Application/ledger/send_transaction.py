@@ -169,17 +169,18 @@ class SendActivateSecret(SendTransactions):
             activate_secret=payload)
 
 
-        return   make_header_and_transaction(
+        transaction_id, transaction=  make_header_and_transaction(
                                             payload=payload,
                                             inputs=inputs,
                                             outputs=outputs,
                                             txn_key=txn_key,
                                             batch_key=batch_key)
 
+        return transaction_id, transaction
 
     async def push_batch(self, transactions, batch_signer):
         batch_id, batch_bytes = self.multiple_transactions_batch(
-                        [e["transaction"] for e in transactions], batch_signer)
+                        transactions, batch_signer)
 
         await self.push_n_wait(batch_bytes, batch_id)
         return batch_id, batch_bytes
