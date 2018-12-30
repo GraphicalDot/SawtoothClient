@@ -16,13 +16,14 @@ from sanic import response
 from errors import errors
 import db.accounts_query as accounts_db
 from db.share_secret import get_addresses_on_ownership, update_mnemonic_encryption_salt
+from db.db_secrets import get_addresses_on_ownership
 import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
 from ledger.accounts.organization_account.submit_organization_account import submit_organization_account
 from ledger.accounts.user_account.submit_user_account import submit_user_account
 from ledger.mnemonics.share_secrets.submit_share_secret import share_secret_batch_submit
 from ledger.mnemonics.activate_secret.submit_activate_secret import activate_secret_batch_submit
-from ledger.mnemonics.execute_shared_mnemonic.submit_execute_share_mnemonic import submit_execute_share_mnemonic
+from ledger.mnemonics.execute_share_secret.submit_execute_share_secret import submit_execute_share_secret
 from ledger.mnemonics.receive_secrets.submit_receive_secret import submit_receive_secret
 
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
@@ -200,24 +201,79 @@ async def all_share_secrets(request, requester):
             })
 
 
-@USERS_BP.post('/execute_shared_secret')
+
+
+@USERS_BP.post('/share_secrets_on_receive_address')
+@authorized()
+async def share_secrets_on_receive_address(request, requester):
+    """
+    On a receive_secret address of the requester, there might have been
+    several secret_share transactions shared with it  i.e share_secret
+    transactions have receive_secret address as their ownership
+    """
+    required_fields = ["receive_secret_address"]
+    validate_fields(required_fields, request.json)
+    result = await get_addresses_on_ownership(request.app, request.json["receive_secret_address"])
+    return response.json(
+            {
+            'error': False,
+            'success': True,
+            "data": result,
+            })
+
+
+
+@USERS_BP.post('/execute_share_secret')
 @authorized()
 async def execute_shared_secret(request, requester):
     """
+    A user who wanted to share their menmonic secret, split their secret after double
+    encryption with scrypt key generated from their menmonic
 
+    Now, every piece was shared on different share_secret transactions created by the user
+    the ownership of the execution of these share_secret addresses lies with the
+    receive_secret addresses as the ewset key was encrypted with the public key of the
+    receive_secret
+
+    So, A user wit whom a part of the secret was shared through their receive_secret
+    address, has the authority to execute it..i.e decrypt with the private key of this
+    receive_secret, decrypt also the reset key, encrypt the secret with the new reset
+    key
     """
-    required_fields = ["shared_secret_address"]
+    required_fields = ["receive_secret_address", "share_secret_address"]
     validate_fields(required_fields, request.json)
 
-    instance = await resolve_address.ResolveAddress(
-                request.json["shared_secret_address"],
+    receive_secret = await resolve_address.ResolveAddress(
+                request.json["receive_secret_address"],
                     request.app.config.REST_API_URL)
 
-    if instance.type != "SHARE_SECRET":
+    ##check if the receive_secret address is indeed a receive_secret
+    if receive_secret.type != "RECEIVE_SECRET":
+        raise errors.ApiInternalError("This address is not RECEIVE_SECRET contract address")
+    else:
+        logging.info("Instance is RECEIVE_SECRET")
+
+    share_secret = await resolve_address.ResolveAddress(
+                request.json["share_secret_address"],
+                    request.app.config.REST_API_URL)
+
+    ##check if the receive_secret address is indeed a receive_secret
+    if share_secret.type != "SHARE_SECRET":
         raise errors.ApiInternalError("This address is not SHARE_SECRET contract address")
     else:
         logging.info("Instance is SHARE_SECRET")
 
+
+    logging.info(share_secret.data)
+
+    if share_secret.data.get("ownership") != request.json["receive_secret_address"]:
+        logging.error("Ownership of SHARE_SECRET is not with this RECEIVE_SECRET")
+
+
+    ##CHecking if this receive secret is actually belongs to this user
+    ##this will checked by getting Public/Private key pair at idx of receiv secret
+    ##from the requester mnemonic
+    """
     address = addresser.user_address(requester["acc_zero_pub"], 0)
 
     if instance.data["ownership"] != address:
@@ -233,6 +289,7 @@ async def execute_shared_secret(request, requester):
         logging.info(f" {instance.data['active']}SHARE_SECRET is active i.e requires execution by the uesr")
 
     await submit_execute_share_mnemonic(request.app, requester, instance.data)
+    """
     return response.json(
             {
             'error': False,

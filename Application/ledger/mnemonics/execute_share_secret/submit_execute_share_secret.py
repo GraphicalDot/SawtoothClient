@@ -12,9 +12,8 @@ from encryption.symmetric import aes_decrypt, aes_encrypt
 from encryption.asymmetric import priv_decrypt
 from encryption.signatures import ecdsa_signature
 from routes.route_utils import indian_time_stamp
-from .__send_execute_share_mnemonic import __send_execute_share_mnemonic
 
-async def submit_execute_share_mnemonic(app, requester, shared_secret_state):
+async def submit_execute_share_secret(app, requester, shared_secret_state):
 
     logging.info(shared_secret_state)
     user = await ResolveAccount(requester, app)

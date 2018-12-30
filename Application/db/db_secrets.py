@@ -103,7 +103,25 @@ class DBSecrets(object):
                     "reset_salt": trans["salt"]})\
             .run(app.config.DB)
 
+async def get_addresses_on_ownership(app, receive_secret_address):
+    #fetch shared_secret contracts on the basis of the ownerhsip
+    ##since the originla user floats a smart contract to different users directing
+    ##to their account addresses, this function will fecth these share_secret contract
+    ##for toher users who want to update this shared_secret address with the reset_key
 
+    try:
+        cursor= await r.table(app.config.DATABASE["share_secret"])\
+            .filter({"ownership": receive_secret_address})\
+            .pluck(["idx", "ownership", "public", "role", "share_secret_address", "updated_on", "created_on", "active"])\
+            .coerce_to("array")\
+            .run(app.config.DB)
+
+    except ReqlNonExistenceError as e:
+        logging.error(f"Error in inserting {data} which is {e}")
+        raise ApiBadRequest(
+            f"Error in storing asset {e}")
+
+    return cursor
 
 
 
@@ -169,21 +187,5 @@ async def update_mnemonic_encryption_salt(app, user_id,salt_one, salt_two):
 
 
 
-async def get_addresses_on_ownership(app, owner_account_address):
-    #fetch shared_secret contracts on the basis of the ownerhsip
-    ##since the originla user floats a smart contract to different users directing
-    ##to their account addresses, this function will fecth these share_secret contract
-    ##for toher users who want to update this shared_secret address with the reset_key
 
-    try:
-        cursor= await r.table(app.config.DATABASE["share_mnemonic"])\
-            .filter({"ownership": owner_account_address})\
-            .run(app.config.DB)
-
-    except ReqlNonExistenceError as e:
-        logging.error(f"Error in inserting {data} which is {e}")
-        raise ApiBadRequest(
-            f"Error in storing asset {e}")
-
-    return await cursor_to_result(cursor)
 """

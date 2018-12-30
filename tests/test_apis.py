@@ -5,7 +5,8 @@ import requests
 import rethinkdb as ret
 from test_static import  USER_REGISTRATION, SHARE_MNEMONIC, LOGIN, GET_OTPS, \
             FORGOT_PASSWORD, ALL_SHARE_SECRETS, EXECUTE_SHARE_SECRET,\
-            CREATE_RECEIVE_SECRET, GET_ACCOUNT, GET_RECEIVE_SECRETS
+            CREATE_RECEIVE_SECRET, GET_ACCOUNT, GET_RECEIVE_SECRETS,\
+            GET_SHARES_ON_RECEIVE_SECRETS
 
 from test_miscelleneous import get_headers, receive_asset_data, revoke_time_stamp
 import json
@@ -151,6 +152,27 @@ class SecretAPIS(aobject):
         return requests.post(GET_RECEIVE_SECRETS,
                     headers=headers)
 
+
+
+    async def get_shares_on_receive_secrets(self, requester, receive_secret_address):
+        headers = get_headers(requester["email"],
+                        requester["password"])
+
+        data = {"receive_secret_address": receive_secret_address}
+        return requests.post(GET_SHARES_ON_RECEIVE_SECRETS,
+                    data=json.dumps(data),
+                    headers=headers)
+
+    async def execute_share_secret(self, requester, receive_secret_address, share_secret_address):
+        headers = get_headers(requester["email"],
+                        requester["password"])
+
+        data = {"receive_secret_address": receive_secret_address,
+                "share_secret_address": share_secret_address}
+        return requests.post(EXECUTE_SHARE_SECRET,
+                    data=json.dumps(data),
+                    headers=headers)
+
 class AccountApis(aobject):
     async def __init__(self):
         pass
@@ -203,14 +225,6 @@ class AccountApis(aobject):
 
         return requests.get(GET_ACCOUNT, headers=headers)
 
-    async def execute_share_secret(self, requester, share_secret_address):
-        headers = get_headers(requester["email"],
-                        requester["password"])
-
-        data = {"shared_secret_address": share_secret_address}
-        return requests.post(EXECUTE_SHARE_SECRET,
-                    data=json.dumps(data),
-                    headers=headers)
 
 
     @staticmethod
