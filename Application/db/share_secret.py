@@ -30,11 +30,12 @@ async def update_share_mnemonic(app, trans):
             .run(app.config.DB)
 
 
-async def update_mnemonic_encryption_salt(app, user_id,salt_one, salt_two):
+async def update_mnemonic_encryption_salts(app, user_id, salt_array):
+    ##salt_array will be a list of dict
+    ##each dict {"salt":, "receive_secret_address"}
     return await r.table(app.config.DATABASE["users"])\
             .filter({"user_id": user_id})\
-            .update({"org_mnemonic_encryption_salt_one": salt_one,
-                "org_mnemonic_encryption_salt_two": salt_two})\
+            .update({"org_mnemonic_encryption_salts": salt_array})\
             .run(app.config.DB)
 
 

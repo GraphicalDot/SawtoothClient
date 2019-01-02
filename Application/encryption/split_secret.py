@@ -56,14 +56,14 @@ def split_mnemonic(key_salt_array, mnemonic, minimum_required, total_shares):
 
     #SecretSharer.split_secret("c4bbcb1fbec99d65bf59d85c8cb62ee2db963f0fe106f483d9afa73bd4e39a8a", 2, 3)
 
-def combine_mnemonic(key_salt_array, shares):
+def combine_mnemonic(secret_salt_array):
     ##ARGs:
     ##      shares:str must be a list of shamir secrets,
     ##              must be minimum required when secrets were created
     ##generating scrypt key on the basis of email and salt
 
     new_list = []
-    for ((key, salt), secret) in zip(key_salt_array, shares):
+    for (key, salt, secret) in secret_salt_array:
         _key, _salt, _secret = binascii.unhexlify(key), binascii.unhexlify(salt),\
                     binascii.unhexlify(secret)
         decrypted_share = aes_decrypt(_key, _secret)

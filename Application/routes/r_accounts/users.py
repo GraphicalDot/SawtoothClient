@@ -15,7 +15,7 @@ import binascii
 from sanic import response
 from errors import errors
 import db.accounts_query as accounts_db
-from db.share_secret import get_addresses_on_ownership, update_mnemonic_encryption_salt
+from db.share_secret import get_addresses_on_ownership, update_mnemonic_encryption_salts
 from db.db_secrets import get_addresses_on_ownership
 import re
 #from ledger.accounts.float_account.submit_float_account import submit_float_account
@@ -239,14 +239,16 @@ async def recover_mnemonic(request, requester):
     for share_secret in share_secrets:
         _d = await db_instance.get_fields( "share_secret_address",
                 share_secret["address"],
-                ["reset_key", "reset_bare_key", "reset_salt", "share_secret_address"])
-        _d.update({"reset_secret": share_secret["reset_secret"]})
-        new_list.append(_d)
+                ["reset_key", "reset_bare_key", "reset_salt"])
+        share_secret.update({"reset_key": _d["reset_key"],
+            "reset_bare_key": _d["reset_bare_key"],
+            "reset_salt": _d["reset_salt"]})
 
     #logging.info(new_list)
+    logging.info(share_secrets)
 
-    shares = []
-    for one in new_list:
+    shares = {}
+    for one in share_secrets:
         one_salt = binascii.unhexlify(one["reset_salt"])
         reset_secret = binascii.unhexlify(one["reset_secret"])
         scrypt_key, _ = key_derivations.generate_scrypt_key(request.json["password"], 1, salt=one_salt)
@@ -254,13 +256,35 @@ async def recover_mnemonic(request, requester):
 
         de_org_secret = symmetric.aes_decrypt(scrypt_key, reset_secret)
         logging.info(de_org_secret)
-        shares.append(de_org_secret)
-    #received_result =await get_addresses_on_ownership(request.app, address)
+        shares.update({one["ownership"]: [de_org_secret]})
 
-    logging.info(shares[0:3])
-    salt_one = binascii.unhexlify(requester["org_mnemonic_encryption_salt_one"])
-    salt_two = binascii.unhexlify(requester["org_mnemonic_encryption_salt_two"])
+        #received_result =await get_addresses_on_ownership(request.app, address)
+    logging.info(shares)
 
+    address_salt_array = requester["org_mnemonic_encryption_salts"]
+
+    final = []
+    for e in address_salt_array:
+        value = shares[e["receive_secret_address"]]
+        value.append(e["salt"])
+        final.append(value)
+
+    logging.info(final)
+
+    keys= await asyncio.gather(*[
+                gateway_scrypt_keys(request.app, requester["email"], 1, salt)
+                     for (secret, salt) in final
+            ])
+
+    pots = []
+    for ((key, salt1),(secret, salt2)) in zip(keys, final):
+        logging.info(f"key={key}, salt1={salt1}, salt={salt2}, secret={secret}")
+        pots.append([key, salt1, secret])
+
+    g = combine_mnemonic(pots)
+    logging.info(g)
+
+    """
     fucks = combine_mnemonic(requester["email"], shares, salt_one, salt_two)
     decrypted_mnemonic =  encryption_utils.decrypt_mnemonic_privkey(
             requester["encrypted_admin_mnemonic"],
@@ -269,7 +293,7 @@ async def recover_mnemonic(request, requester):
 
     logging.info(fucks)
     logging.info(decrypted_mnemonic)
-
+    """
     return response.json(
             {
             'error': False,
@@ -451,13 +475,15 @@ async def share_mnemonic(request, requester):
     logging.info(nth_keys_data)
 
 
+    ##will be a list of lists wtih each entry, hex encoded [key, salt]
     async with aiohttp.ClientSession() as session:
         result= await asyncio.gather(*[
             gateway_scrypt_keys(request.app, user.org_db["email"], 1, None)
                  for _ in range(0, len(total_shares))
         ])
 
-    logger.success(result)
+    ##will be a list of dict with each dict as
+    ##{"key": , "salt": , "secret"}, all three being hex encoded
     key_salt_secrets = split_mnemonic(result,
                         user.decrypted_mnemonic, request.json["minimum_required"],
                         len(request.json["receive_secret_addresess"]))
@@ -466,6 +492,10 @@ async def share_mnemonic(request, requester):
 
     logger.info(key_salt_secrets)
 
+    #This code block is to test whether the salts generated above give out
+    ##the same scrypt keys, which in turn can be used to decrypt the mnemonic shares
+    ##and combine them to form the mnemonic
+    """
     keys= await asyncio.gather(*[
             gateway_scrypt_keys(request.app, user.org_db["email"], 1, e["salt"])
                  for e in key_salt_secrets
@@ -475,13 +505,17 @@ async def share_mnemonic(request, requester):
     logger.success(g)
 
     """
+    for (a, receive_secret) in zip(key_salt_secrets, receive_secrets):
+        receive_secret.update({"secret": a["secret"], "salt": a["salt"]})
 
 
 
     ##upadting user entry in the users table with the salt which was used in
     ##encrypting mnemonic before it was split into shamir secret shares
-    await update_mnemonic_encryption_salt(request.app, requester["user_id"],
-        binascii.hexlify(kdf_salt_one).decode(), binascii.hexlify(kdf_salt_two).decode())
+    salt_array = [{"salt": e["salt"], "receive_secret_address": e["address"]} \
+                                                for e in receive_secrets]
+    await update_mnemonic_encryption_salts(request.app, requester["user_id"],
+            salt_array)
     #index = list(nth_keys_data.keys())[0]
 
     ##all the share_secret transaction nonce will be signed by the xeroth
@@ -495,8 +529,8 @@ async def share_mnemonic(request, requester):
     ##updating requester data dict with zeroth private key of the requester
     requester.update({"zeroth_private": requester_zero_priv})
     transactions = await share_secret_batch_submit(request.app, requester,
-                receive_secrets, secret_shares, nth_keys_data)
-    """
+                receive_secrets, nth_keys_data)
+
     return response.json(
             {
             'error': False,

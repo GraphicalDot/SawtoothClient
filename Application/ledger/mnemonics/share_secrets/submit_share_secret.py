@@ -34,15 +34,19 @@ from ledger.send_transaction import SendTransactions
 from db.db_secrets import DBSecrets
 
 
-async def share_secret_batch_submit(app, requester, receive_secrets,
-                                                secret_shares, nth_keys_data):
+async def share_secret_batch_submit(app, requester, receive_secrets, nth_keys_data):
     """
     Args:
         requester(dict): db entry of the user who is sharing the Menmonic
-        receive_secrets(list of dictionaies): The user accounts present on the
-                            the blockchain with whom the user wants to share the mnemonic
-        secret_shares(list of str): encrypted mnemonic shamir secret shares
-        mth_keys_data(dict with keys as random indexes): The Pub/Priv key pairs
+        receive_secrets(list of dictionaies): The recieve_secret transactions present
+                        on the the blockchain with whom the user wants to share
+                        the mnemonic, this has three addtional keys
+                        salt (hex encoded): THe salt used, while encrypting mnemonic
+                            share with scrypt ket generated from user email
+                        address(string): address of the receive secret on blockchain
+                        secret(hex encoded): hex encoded encrypted secret
+
+        nth_keys_data(dict with keys as random indexes): The Pub/Priv key pairs
                     generated from the random indexes generated from the user mnemonic
                     who wants to share his/her mnemonic, the pub/priv keys are ecc keys
                     fetched from go_api
@@ -62,9 +66,9 @@ async def share_secret_batch_submit(app, requester, receive_secrets,
     async with aiohttp.ClientSession() as session:
         transactions = await asyncio.gather(*[
               submit_share_secret(app, requester, requester_address,
-                        receive_secret, secret_share, int(index), nth_keys_data[index]["private_key"])
+                        receive_secret, int(index), nth_keys_data[index]["private_key"])
 
-            for (receive_secret, secret_share, index) in zip(receive_secrets, secret_shares,
+            for (receive_secret, index) in zip(receive_secrets,
                                         list(nth_keys_data.keys()))
         ])
 
@@ -113,7 +117,7 @@ async def share_secret_batch_submit(app, requester, receive_secrets,
 
 
 async def submit_share_secret(app, requester, requester_address, receive_secret,
-                secret_share, index, private_key):
+                index, private_key):
 
     """
     Args:
@@ -128,7 +132,9 @@ async def submit_share_secret(app, requester, requester_address, receive_secret,
                 'nonce_hash': '87b4e684b071956e5598b.........',
                 'idx': 1044988318,
                 'public': '026f914d49e6321f668139e75.........',
-                'address': 'a9d5c23e49419e21d9f5a2ef.........'}
+                'address': 'a9d5c23e49419e21d9f5a2ef.........',
+                "salt":
+                "secret": the part of the mnemonic share shared with this receive_secret}
                 address is added by deserialize_receive_secret function
         secret_share (str): One share of the encrypted mnemonic of the user out of many
             others which will be shared with the user represented by account.
@@ -152,7 +158,7 @@ async def submit_share_secret(app, requester, requester_address, receive_secret,
 
 
     key = generate_aes_key(16) ##this is in bytes
-    ciphertext, tag, nonce = aes_encrypt(key, secret_share)
+    ciphertext, tag, nonce = aes_encrypt(key, receive_secret["secret"])
     ciphertext = b"".join([tag, ciphertext, nonce])
     ##The AES_GCM encrypted file content
     encryptes_secret_share = binascii.hexlify(ciphertext).decode()
@@ -171,7 +177,7 @@ async def submit_share_secret(app, requester, requester_address, receive_secret,
                         "active": False,
                         "secret": encryptes_secret_share,
                         "key": encrypted_key,
-                        "secret_hash": hashlib.sha512(secret_share.encode()).hexdigest(),
+                        "secret_hash": hashlib.sha512(receive_secret["secret"]).hexdigest(),
                         "role": "USER",
                         "idx": index,
                         "created_on": route_utils.indian_time_stamp(),
