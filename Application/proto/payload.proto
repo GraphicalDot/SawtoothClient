@@ -17,6 +17,7 @@ message TransactionPayload {
         ACTIVATE_SECRET=11;
         EXECUTE_SECRET=12;
         RECEIVE_SECRET=13;
+        CONCULDE_SECRET=14;
     }
 
       PayloadType payload_type = 1;
@@ -36,6 +37,7 @@ message TransactionPayload {
       CreateActivateSecret activate_secret=11;
       CreateExecuteShareSecret execute_secret=12;
       CreateReceiveSecret receive_secret=13;
+      CreateConcludeSecret conclude_secret=13;
     }
 
 
@@ -61,6 +63,16 @@ message CreateReceiveSecret {
     string requester_address=7;
     uint32 idx =8;
 }
+
+
+message CreateConcludeSecret {
+    string share_secret_address=1;
+    string timestamp=7;
+    uint32 nonce=3;
+    string nonce_hash=4;
+    string signed_nonce = 5;
+}
+
 
 
 message CreateExecuteShareSecret {

@@ -38,13 +38,16 @@ from encryption import key_derivations
 import aiohttp
 import asyncio
 import datetime
+import json
 from encryption.split_secret import split_mnemonic, combine_mnemonic
 from ledger import deserialize_state
 from routes.resolve_account import ResolveAccount
 from ledger import deserialize_state
 from db.db_secrets import DBSecrets
-import coloredlogs, logging
+import coloredlogs, verboselogs, logging
+verboselogs.install()
 coloredlogs.install()
+logger = logging.getLogger(__name__)
 
 
 from .send_email import ses_email
@@ -58,25 +61,6 @@ from ._format_api_result import format_get_organization_account,\
 from sanic import Blueprint
 USERS_BP = Blueprint('users', url_prefix='/users')
 
-def asyncinit(cls):
-    __new__ = cls.__new__
-
-    async def init(obj, *arg, **kwarg):
-        await obj.__init__(*arg, **kwarg)
-        return obj
-
-    def new(cls, *arg, **kwarg):
-        obj = __new__(cls, *arg, **kwarg)
-        coro = init(obj, *arg, **kwarg)
-        #coro.__init__ = lambda *_1, **_2: None
-        return coro
-
-    cls.__new__ = new
-    return cls
-
-
-
-
 
 
 
@@ -85,6 +69,14 @@ async def get_address(request):
     """
     """
     address = request.args.get("address")
+    logger.info(f"This is the address {address}")
+    logger.debug(f"This is the address {address}")
+    logger.error(f"This is the address {address}")
+    logger.verbose(f"This is the address {address}")
+    logger.critical(f"This is the address {address}")
+    logger.warning(f"This is the address {address}")
+    logger.success(f"This is the address {address}")
+    logger.notice(f"This is the address {address}")
 
     if not address:
         raise errors.CustomError("address is required")
@@ -385,6 +377,19 @@ async def execute_shared_secret(request, requester):
 
 
 
+async def gateway_scrypt_keys(app, password, num_keys, salt):
+    async with aiohttp.ClientSession() as session:
+        try:
+            headers = {"x-api-key": app.config.API_GATEWAY_KEY}
+            async with session.post(app.config.API_GATEWAY["SCRYPT_KEYS"],
+                     data=json.dumps({"password": password, "num_keys": num_keys, "salt": salt}),
+                     headers=headers) as request_response:
+                data = await request_response.read()
+        except Exception as e:
+            logging.error(f"error {e} in {__file__} ")
+            raise ApiInternalError("Error with s3 url")
+    return json.loads(data)
+
 
 
 @USERS_BP.post('/share_mnemonic')
@@ -400,6 +405,7 @@ async def share_mnemonic(request, requester):
     required_fields = ["receive_secret_addresess", "minimum_required"]
 
     validate_fields(required_fields, request.json)
+    total_shares = request.json["receive_secret_addresess"]
 
     if request.json["minimum_required"] < 3:
         raise errors.CustomError("To share passwords minimum 3 users are required")
@@ -430,7 +436,7 @@ async def share_mnemonic(request, requester):
 
     ##resolving account for the requester to get his decrypted menmonic
     user = await ResolveAccount(requester, request.app)
-    logging.info(user.decrypted_mnemonic)
+    logger.debug(user.decrypted_mnemonic)
 
     ##On the basis of the length of user_accounts, generate random indexes
     ## from the mnemonic and get the PUBlic/private keys corresponding to these
@@ -444,9 +450,32 @@ async def share_mnemonic(request, requester):
     ##decrypted using just his email
     logging.info(nth_keys_data)
 
-    kdf_salt_one, kdf_salt_two, secret_shares = split_mnemonic(user.org_db["email"],
+
+    async with aiohttp.ClientSession() as session:
+        result= await asyncio.gather(*[
+            gateway_scrypt_keys(request.app, user.org_db["email"], 1, None)
+                 for _ in range(0, len(total_shares))
+        ])
+
+    logger.success(result)
+    key_salt_secrets = split_mnemonic(result,
                         user.decrypted_mnemonic, request.json["minimum_required"],
                         len(request.json["receive_secret_addresess"]))
+
+    # user.org_db["email"],
+
+    logger.info(key_salt_secrets)
+
+    keys= await asyncio.gather(*[
+            gateway_scrypt_keys(request.app, user.org_db["email"], 1, e["salt"])
+                 for e in key_salt_secrets
+        ])
+
+    g = combine_mnemonic(keys, [e["secret"] for e in key_salt_secrets])
+    logger.success(g)
+
+    """
+
 
 
     ##upadting user entry in the users table with the salt which was used in
@@ -467,6 +496,7 @@ async def share_mnemonic(request, requester):
     requester.update({"zeroth_private": requester_zero_priv})
     transactions = await share_secret_batch_submit(request.app, requester,
                 receive_secrets, secret_shares, nth_keys_data)
+    """
     return response.json(
             {
             'error': False,

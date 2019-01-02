@@ -24,6 +24,13 @@
     "DB": false,
     "CONTEXT": false,
     "SIGNER": false,
+    "logger": false,
+    "API_GATEWAY_KEY": "DfyOmZ76eO9xEl23P3gkG1aUTbASCHCv9hHVSWGV",
+    "API_GATEWAY": {
+
+        "SCRYPT_KEYS": "https://gvv7lm9uui.execute-api.ap-south-1.amazonaws.com/Production/generate_scrypt_keys"
+    },
+
     "DATABASE":{
 
             "ip": "13.233.46.185",
