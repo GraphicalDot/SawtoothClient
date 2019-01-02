@@ -64,17 +64,6 @@ message CreateReceiveSecret {
     uint32 idx =8;
 }
 
-
-message CreateConcludeSecret {
-    string share_secret_address=1;
-    string timestamp=7;
-    uint32 nonce=3;
-    string nonce_hash=4;
-    string signed_nonce = 5;
-}
-
-
-
 message CreateExecuteShareSecret {
     string share_secret_address=1;
     string reset_secret=2;
@@ -97,6 +86,25 @@ message CreateActivateSecret {
 }
 
 
+
+//Remeber to
+message CreateConcludeSecret {
+    bool active=2;
+    //THis active will be True if the user has asked for password reset,
+    //Once reset, the secret will be updated again as encryption with same key
+    //is not good, New aes key will be generated with new salt
+    string updated_on=10;
+    bool executed=11; //Whether this has been executed in the present cycle after it was made active
+    string executed_on=12; //The last time the acceptor has executed this contract i.e
+                    //encrypted his allotted share with new reset key
+    uint32 num_executions=13; //number of times the acceptor has executed this contract
+    uint32 num_recoveries=14; //number of times the user has receovered his/her mnemonic
+    uint32 nonce=15;
+    string nonce_hash=16;
+    string signed_nonce=17;
+}
+
+
 //Remeber to
 message CreateShareSecret {
     string secret=1;
@@ -112,17 +120,25 @@ message CreateShareSecret {
     string reset_key=8;
     string created_on=9;
     string updated_on=10;
+
+    //when the contract was executed by receive_secret owners
     bool executed=11; //Whether this has been executed in the present cycle after it was made active
     string executed_on=12; //The last time the acceptor has executed this contract i.e
                     //encrypted his allotted share with new reset key
     uint32 num_executions=13; //number of times the acceptor has executed this contract
-    uint32 num_recoveries=14; //number of times the user has receovered his/her mnemonic
-    uint32 nonce=15;
-    string nonce_hash=16;
-    string signed_nonce=17;
-    string user_address=18;
-    string reset_secret=19;
+
+    //when the secret was receovered from reset_key
+    bool recovered=14;
+    string recovered_on=15;
+    uint32 num_recoveries=16; //number of times the user has receovered his/her mnemonic
+
+    uint32 nonce=17;
+    string nonce_hash=18;
+    string signed_nonce=19;
+    string user_address=20;
+    string reset_secret=21;
 }
+
 
 
 
