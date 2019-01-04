@@ -39,12 +39,18 @@ from routes.r_accounts import ACCOUNTS_BP
 from routes.r_assets import ASSETS_BP
 from routes.route_utils import set_password, new_account
 
-
+#from sanic_session import Session
+from sanic_jinja2 import SanicJinja2
 
 app = Sanic(__name__)
 import coloredlogs, logging
 coloredlogs.install()
 
+from sanic_jinja2 import SanicJinja2
+
+#Session(app)
+
+jinja = SanicJinja2(app)
 
 
 
@@ -74,6 +80,8 @@ def parse_args(args):
     parser.add_argument('--admin_password',
                         help='The Password for ADMIN account')
 
+    parser.add_argument('--env',
+                        help='The Environment for running the application')
     return parser.parse_args(args)
 
 
@@ -124,6 +132,24 @@ def load_config(app):  # pylint: disable=too-many-branches
         app.config.SECRET_KEY = opts.secret_key
 
 
+    if opts.env is None:
+        logging.error("ENV must be specified")
+        sys.exit(1)
+    else:
+        if opts.env =="PRODUCTION":
+            app.config.REST_API_URL = app.config.ENV["PRODUCTION"]["REST_API_URL"]
+            app.config.GO_API_URL =app.config.ENV["PRODUCTION"]["GO_API_URL"]
+            app.config.DATABASE["ip"] =app.config.ENV["PRODUCTION"]["RETHINKDB_URL"]
+
+        elif opts.env =="STAGING":
+            app.config.REST_API_URL = app.config.ENV["PRODUCTION"]["REST_API_URL"]
+            app.config.GO_API_URL =app.config.ENV["PRODUCTION"]["GO_API_URL"]
+            app.config.DATABASE["ip"] =app.config.ENV["PRODUCTION"]["RETHINKDB_URL"]
+
+        else:
+            logging.error(f"Not a valid environment {opts.env}")
+            sys.exit(1)
+
     if not app.config.ADMIN_MNEMONIC:
         logging.error("ADMIN 12 word mnemonics was not provided")
         sys.exit(1)
@@ -140,6 +166,7 @@ def load_config(app):  # pylint: disable=too-many-branches
     if app.config.STORAGE["AWS_ACCESS_KEY"] is None:
         logging.error("aws access key was not provided")
         sys.exit(1)
+    app.config.jinja = jinja
 
 async def master_mnemonic(app):
     """

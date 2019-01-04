@@ -64,6 +64,12 @@ USERS_BP = Blueprint('users', url_prefix='/users')
 
 
 
+@USERS_BP.get('/index')
+async def index(request):
+    logging.info("Hey dude i came here")
+    return request.app.config.jinja.render("index.html", request, greetings="Hello, sanic!")
+
+
 @USERS_BP.get('/address')
 async def get_address(request):
     """
