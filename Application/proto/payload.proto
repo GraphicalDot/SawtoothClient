@@ -17,7 +17,7 @@ message TransactionPayload {
         ACTIVATE_SECRET=11;
         EXECUTE_SECRET=12;
         RECEIVE_SECRET=13;
-        CONCULDE_SECRET=14;
+        CONCLUDE_SECRET=14;
     }
 
       PayloadType payload_type = 1;
@@ -37,7 +37,7 @@ message TransactionPayload {
       CreateActivateSecret activate_secret=11;
       CreateExecuteShareSecret execute_secret=12;
       CreateReceiveSecret receive_secret=13;
-      CreateConcludeSecret conclude_secret=13;
+      CreateConcludeSecret conclude_secret=14;
     }
 
 

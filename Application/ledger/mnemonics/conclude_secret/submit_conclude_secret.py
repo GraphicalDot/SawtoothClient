@@ -16,11 +16,16 @@ import aiohttp
 import asyncio
 import datetime
 import json
+import random
+import hashlib
 from addressing import addresser, resolve_address
 from remotecalls import remote_calls
 from protocompiled import payload_pb2
 from ledger import deserialize_state
 from ledger.send_transaction import SendConcludeSecret
+from encryption.utils import create_signer
+from encryption.signatures import ecdsa_signature
+from routes.route_utils import indian_time_stamp
 
 
 import coloredlogs, verboselogs, logging
@@ -75,16 +80,20 @@ async def conclude_secret_batch_submit(app, requester, mnemonic):
         ])
 
 
-    indexes = [e["idx"] for e in share_secret_transactions])
+    indexes = [e["idx"] for e in share_secret_transactions]
     indexes.append(0)
     nth_keys = await remote_calls.key_index_keys(app, mnemonic, indexes)
 
     zeroth_priv, zeroth_pub = nth_keys[str(0)]["private_key"], nth_keys[str(0)]["public_key"]
 
+
+    for share_secret_state in share_secret_transactions:
+        logger.info(nth_keys[str(share_secret_state["idx"])]["private_key"])
+
     async with aiohttp.ClientSession() as session:
         transactions = await asyncio.gather(*[
               submit_conclude_secret(app, requester_address, share_secret_state,
-              zeroth_priv, indexes[str(share_secret_state["idxs"])])
+              zeroth_priv, nth_keys[str(share_secret_state["idx"])]["private_key"])
                 for share_secret_state in share_secret_transactions
         ])
 
@@ -93,7 +102,7 @@ async def conclude_secret_batch_submit(app, requester, mnemonic):
     logger.info(nth_keys)
 
 
-    instance = await SendActivateSecret(app.config.REST_API_URL, app.config.TIMEOUT)
+    instance = await SendConcludeSecret(app.config.REST_API_URL, app.config.TIMEOUT)
     batch_id, batch_list_bytes = await instance.push_batch([e["transaction"] for e in transactions], app.config.SIGNER)
 
     """
@@ -171,7 +180,7 @@ async def submit_conclude_secret(app, requester_address, share_secret_state, zer
     outputs = [share_secret_state["address"]]
 
     payload = payload_pb2.CreateConcludeSecret(**transaction_data)
-    instance = await SendActivateSecret(app.config.REST_API_URL, app.config.TIMEOUT)
+    instance = await SendConcludeSecret(app.config.REST_API_URL, app.config.TIMEOUT)
     transaction_id, transaction= await instance.create_conclude_secret(
                 txn_key=acc_signer, batch_key=app.config.SIGNER,
                 inputs=inputs, outputs=outputs, payload=payload)
@@ -180,4 +189,5 @@ async def submit_conclude_secret(app, requester_address, share_secret_state, zer
     transaction_data.update({"transaction_id": transaction_id,
                             "transaction": transaction,
                             })
+    logger.info(transaction_data)
     return transaction_data

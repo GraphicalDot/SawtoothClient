@@ -1,9 +1,8 @@
 
 
 from ledger import messaging
-import coloredlogs, logging
 from errors.errors import ApiBadRequest, ApiInternalError
-coloredlogs.install()
+
 
 from addressing import addresser
 from protocompiled import payload_pb2
@@ -18,7 +17,10 @@ import time
 import json
 
 
-
+import coloredlogs, verboselogs, logging
+verboselogs.install()
+coloredlogs.install()
+logger = logging.getLogger(__name__)
 
 @asyncinit
 class SendTransactions(object):
@@ -37,9 +39,9 @@ class SendTransactions(object):
                                 headers=self.headers) as response:
                     data = await response.read()
         except Exception as e:
-            logging.error("Blockchain rest-api is unreachable, Please fix it dude")
+            logger.error("Blockchain rest-api is unreachable, Please fix it dude")
             raise ApiInternalError("Blockchain rest-api is unreachable, Please fix it dude")
-        logging.info(f"Data returned after pushing the transaction on the blockchain {data}")
+        logger.info(f"Data returned after pushing the transaction on the blockchain {data}")
         return data
 
 
@@ -62,26 +64,25 @@ class SendTransactions(object):
                 data = self.load_json(data)
                 status = data['data'][0]['status']
             except Exception as e:
-                logging.error("Error in wait for status")
-                logging.error(e)
+                logger.error("Error in wait for status")
+                logger.error(e)
                 status = ""
                 pass
 
             waited = time.time() - start_time
-            logging.info(f"Trying again, to check block status BLOCK-STATUS {status}")
+            logger.warning(f"Trying again, to check block status BLOCK-STATUS {status}")
 
             if status != 'PENDING':
                 break
-        logging.info(data)
         try:
             if status == "COMMITTED":
-                logging.info("Transaction successfully submittted")
+                logger.success("Transaction successfully submittted")
                 return True
             else:
-                logging.error("Error in the transaction {%s}"%data['data'][0]['message'])
+                logger.error("Error in the transaction {%s}"%data['data'][0]['message'])
                 raise ApiBadRequest("Error in the transaction {%s}"%data['data'][0]['message'])
         except Exception as e:
-                logging.error(data["data"][0]["invalid_transactions"][0]["message"])
+                logger.error(data["data"][0]["invalid_transactions"][0]["message"])
 
         return False
 
@@ -93,7 +94,6 @@ class SendTransactions(object):
             share_secret=payload)
 
 
-        logging.info(payload)
         transaction_id, transaction =  make_header_and_transaction(
                                                     payload=payload,
                                                     inputs=inputs,
@@ -102,7 +102,7 @@ class SendTransactions(object):
                                                     batch_key=batch_key)
 
         #rest_api_response = await self.push_transaction(batch_list_bytes)
-        #logging.info(f"push transaction result is {data}")
+        #logger.info(f"push transaction result is {data}")
         #if not await self.wait_for_status(batch_id):
         #        raise errors.ApiInternalError("The batch couldnt be submitted")
         return transaction_id, transaction
@@ -119,7 +119,7 @@ class SendTransactions(object):
             payload_type=payload_pb2.TransactionPayload.EXECUTE_SECRET,
             execute_secret=payload)
 
-        logging.info(payload, inputs, outputs)
+        logger.info(payload, inputs, outputs)
         transaction_ids, batches, batch_id, batch_list_bytes =\
                         make_header_and_batch(
                             payload=payload,
@@ -144,7 +144,7 @@ class SendTransactions(object):
 
     async def push_n_wait(self, batch_bytes, batch_id):
         rest_api_response = await self.push_transaction(batch_bytes)
-        logging.info(f"push transaction result is {rest_api_response}")
+        logger.info(f"push transaction result is {rest_api_response}")
         if not await self.wait_for_status(batch_id):
             raise ApiInternalError("The batch couldnt be submitted")
         return
@@ -234,7 +234,7 @@ class SendReceiveSecret(SendTransactions):
                                                     batch_key=batch_key)
 
         #rest_api_response = await self.push_transaction(batch_list_bytes)
-        #logging.info(f"push transaction result is {data}")
+        #logger.info(f"push transaction result is {data}")
         #if not await self.wait_for_status(batch_id):
         #        raise errors.ApiInternalError("The batch couldnt be submitted")
 
@@ -264,7 +264,7 @@ class SendExecuteSecret(SendTransactions):
                                                     batch_key=batch_key)
 
         #rest_api_response = await self.push_transaction(batch_list_bytes)
-        #logging.info(f"push transaction result is {data}")
+        #logger.info(f"push transaction result is {data}")
         #if not await self.wait_for_status(batch_id):
         #        raise errors.ApiInternalError("The batch couldnt be submitted")
 
