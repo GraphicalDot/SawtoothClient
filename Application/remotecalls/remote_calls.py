@@ -11,6 +11,21 @@ import coloredlogs, logging
 coloredlogs.install()
 
 
+
+async def gateway_scrypt_keys(app, password, num_keys, salt):
+    async with aiohttp.ClientSession() as session:
+        try:
+            headers = {"x-api-key": app.config.API_GATEWAY_KEY}
+            async with session.post(app.config.API_GATEWAY["SCRYPT_KEYS"],
+                     data=json.dumps({"password": password, "num_keys": num_keys, "salt": salt}),
+                     headers=headers) as request_response:
+                data = await request_response.read()
+        except Exception as e:
+            logging.error(f"error {e} in {__file__} ")
+            raise ApiInternalError("Error with s3 url")
+    return json.loads(data)
+
+
 def load_json(data):
     try:
         request_json = json.loads(data)
@@ -45,7 +60,7 @@ async def from_mnemonic(url, mnemonic):
                 }) as request_response:
                 data = await request_response.read()
         except Exception as e:
-            logging.error(f"error {e} in {__file__} ")
+            logging.error(f"Error {e} in {__file__} ")
             logging.error("Registration api is not working, Please fix it Dude")
             raise ApiInternalError("Registration api is not working, Please fix it Dude")
 

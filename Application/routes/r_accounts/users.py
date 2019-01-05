@@ -25,6 +25,7 @@ from ledger.mnemonics.share_secrets.submit_share_secret import share_secret_batc
 from ledger.mnemonics.activate_secret.submit_activate_secret import activate_secret_batch_submit
 from ledger.mnemonics.execute_share_secret.submit_execute_share_secret import submit_execute_share_secret
 from ledger.mnemonics.receive_secrets.submit_receive_secret import submit_receive_secret
+from ledger.mnemonics.conclude_secret.conclude_secret_api import RecoverSecret
 
 #from ledger.accounts.child_account.submit_child_account import submit_child_account
 from remotecalls import remote_calls
@@ -204,7 +205,14 @@ async def all_share_secrets(request, requester):
 @USERS_BP.post('/recover_mnemonic')
 @authorized()
 async def recover_mnemonic(request, requester):
+
+    required_fields = ["password"]
+    validate_fields(required_fields, request.json)
+    instance = await RecoverSecret(requester, request.app, request.json["password"])
+    await instance.execute()
+
     """
+
 
     Result will have two keys,
     floated and received,
@@ -214,10 +222,8 @@ async def recover_mnemonic(request, requester):
     the received is all the shared_Secret_addresses that have shared with him,
     This information can only be pulled from database right now but
     sawtooth events will be used later
-    """
 
-    required_fields = ["password"]
-    validate_fields(required_fields, request.json)
+
     if requester["role"] == "USER":
         address = addresser.user_address(requester["acc_zero_pub"], 0)
         account = await deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
@@ -290,7 +296,6 @@ async def recover_mnemonic(request, requester):
     g = combine_mnemonic(pots)
     logging.info(g)
 
-    """
     fucks = combine_mnemonic(requester["email"], shares, salt_one, salt_two)
     decrypted_mnemonic =  encryption_utils.decrypt_mnemonic_privkey(
             requester["encrypted_admin_mnemonic"],
@@ -407,18 +412,6 @@ async def execute_shared_secret(request, requester):
 
 
 
-async def gateway_scrypt_keys(app, password, num_keys, salt):
-    async with aiohttp.ClientSession() as session:
-        try:
-            headers = {"x-api-key": app.config.API_GATEWAY_KEY}
-            async with session.post(app.config.API_GATEWAY["SCRYPT_KEYS"],
-                     data=json.dumps({"password": password, "num_keys": num_keys, "salt": salt}),
-                     headers=headers) as request_response:
-                data = await request_response.read()
-        except Exception as e:
-            logging.error(f"error {e} in {__file__} ")
-            raise ApiInternalError("Error with s3 url")
-    return json.loads(data)
 
 
 

@@ -1,18 +1,16 @@
-
 {
     "ENV":{
           "PRODUCTION":{
             "REST_API_URL": "13.234.36.204",
-            "GO_API_URL": "13.232.21.250",
-            "RETHINKDB_URL": "13.233.46.18"
+            "GOAPI_URL": "13.232.21.250",
+            "RETHINKDB_URL": "13.233.46.185"
           },
           "STAGING":{
             "REST_API_URL": "172.28.128.4:8008",
-            "GO_API_URL": "13.232.21.250",
-            "RETHINKDB_URL": "13.233.46.18"
-
+            "GOAPI_URL": "13.232.21.250",
+            "RETHINKDB_URL": "13.233.46.185"
           }
-  },
+      },
    "ROOT_KEY_INDEX": 0,
     "SECRET_KEY": false,
     "ADMIN_MNEMONIC": false,

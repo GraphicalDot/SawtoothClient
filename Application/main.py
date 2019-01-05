@@ -138,18 +138,21 @@ def load_config(app):  # pylint: disable=too-many-branches
     else:
         if opts.env =="PRODUCTION":
             app.config.REST_API_URL = app.config.ENV["PRODUCTION"]["REST_API_URL"]
-            app.config.GO_API_URL =app.config.ENV["PRODUCTION"]["GO_API_URL"]
+            app.config.GOAPI_URL =app.config.ENV["PRODUCTION"]["GOAPI_URL"]
             app.config.DATABASE["ip"] =app.config.ENV["PRODUCTION"]["RETHINKDB_URL"]
 
         elif opts.env =="STAGING":
-            app.config.REST_API_URL = app.config.ENV["PRODUCTION"]["REST_API_URL"]
-            app.config.GO_API_URL =app.config.ENV["PRODUCTION"]["GO_API_URL"]
-            app.config.DATABASE["ip"] =app.config.ENV["PRODUCTION"]["RETHINKDB_URL"]
+            app.config.REST_API_URL = app.config.ENV["STAGING"]["REST_API_URL"]
+            app.config.GOAPI_URL =app.config.ENV["STAGING"]["GOAPI_URL"]
+            app.config.DATABASE["ip"] =app.config.ENV["STAGING"]["RETHINKDB_URL"]
 
         else:
             logging.error(f"Not a valid environment {opts.env}")
             sys.exit(1)
 
+    logging.info(app.config.REST_API_URL)
+    logging.info(app.config.GOAPI_URL)
+    logging.info(app.config.DATABASE)
     if not app.config.ADMIN_MNEMONIC:
         logging.error("ADMIN 12 word mnemonics was not provided")
         sys.exit(1)
@@ -227,6 +230,7 @@ def main():
     #app.blueprint(USER_ACCOUNTS_BP)
     for handler, (rule, router) in app.router.routes_names.items():
         print(rule)
+
     zmq = ZMQEventLoop()
     asyncio.set_event_loop(zmq)
     server = app.create_server(
