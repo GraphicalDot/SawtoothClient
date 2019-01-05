@@ -209,106 +209,14 @@ async def recover_mnemonic(request, requester):
     required_fields = ["password"]
     validate_fields(required_fields, request.json)
     instance = await RecoverSecret(requester, request.app, request.json["password"])
-    await instance.execute()
-
-    """
+    mnemonic = await instance.execute()
 
 
-    Result will have two keys,
-    floated and received,
-    floated will have all the shared_secret addresses that this user have floated
-    and have his encryptes mnemonic distribution
-
-    the received is all the shared_Secret_addresses that have shared with him,
-    This information can only be pulled from database right now but
-    sawtooth events will be used later
-
-
-    if requester["role"] == "USER":
-        address = addresser.user_address(requester["acc_zero_pub"], 0)
-        account = await deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
-
-    else:
-        logging.error("Not implemented yet")
-        raise errors.ApiInternalError("This functionality is not implemented yet")
-
-
-
-    floated = account.get("share_secret_addresses")
-    async with aiohttp.ClientSession() as session:
-        share_secrets= await asyncio.gather(*[
-            deserialize_state.deserialize_share_secret(
-                    request.app.config.REST_API_URL, address)
-                for address in floated
-        ])
-
-    ##TODO: if minimum _requires is satisfied
-    db_instance = await DBSecrets(request.app, table_name="share_secret",
-                                            array_name="share_secret_addresses",
-                                            )
-
-    new_list = []
-    for share_secret in share_secrets:
-        _d = await db_instance.get_fields( "share_secret_address",
-                share_secret["address"],
-                ["reset_key", "reset_bare_key", "reset_salt"])
-        share_secret.update({"reset_key": _d["reset_key"],
-            "reset_bare_key": _d["reset_bare_key"],
-            "reset_salt": _d["reset_salt"]})
-
-    #logging.info(new_list)
-    logging.info(share_secrets)
-
-    shares = {}
-    for one in share_secrets:
-        one_salt = binascii.unhexlify(one["reset_salt"])
-        reset_secret = binascii.unhexlify(one["reset_secret"])
-        scrypt_key, _ = key_derivations.generate_scrypt_key(request.json["password"], 1, salt=one_salt)
-        logging.info(binascii.hexlify(scrypt_key))
-
-        de_org_secret = symmetric.aes_decrypt(scrypt_key, reset_secret)
-        logging.info(de_org_secret)
-        shares.update({one["ownership"]: [de_org_secret]})
-
-        #received_result =await get_addresses_on_ownership(request.app, address)
-    logging.info(shares)
-
-    address_salt_array = requester["org_mnemonic_encryption_salts"]
-
-    final = []
-    for e in address_salt_array:
-        value = shares[e["receive_secret_address"]]
-        value.append(e["salt"])
-        final.append(value)
-
-    logging.info(final)
-
-    keys= await asyncio.gather(*[
-                gateway_scrypt_keys(request.app, requester["email"], 1, salt)
-                     for (secret, salt) in final
-            ])
-
-    pots = []
-    for ((key, salt1),(secret, salt2)) in zip(keys, final):
-        logging.info(f"key={key}, salt1={salt1}, salt={salt2}, secret={secret}")
-        pots.append([key, salt1, secret])
-
-    g = combine_mnemonic(pots)
-    logging.info(g)
-
-    fucks = combine_mnemonic(requester["email"], shares, salt_one, salt_two)
-    decrypted_mnemonic =  encryption_utils.decrypt_mnemonic_privkey(
-            requester["encrypted_admin_mnemonic"],
-            request.app.config.ADMIN_ZERO_PRIV)
-
-
-    logging.info(fucks)
-    logging.info(decrypted_mnemonic)
-    """
     return response.json(
             {
             'error': False,
             'success': True,
+            'data': {"mnemonic": mnemonic},
             })
 
 

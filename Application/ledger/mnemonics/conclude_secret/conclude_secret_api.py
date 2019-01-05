@@ -5,14 +5,15 @@ import json
 import binascii
 from asyncinit import asyncinit
 from errors import errors
-import coloredlogs, verboselogs, logging
 from addressing import addresser, resolve_address
 from ledger import deserialize_state
 from db.db_secrets import DBSecrets
 from encryption import symmetric
 from encryption.split_secret import split_mnemonic, combine_mnemonic
 from remotecalls.remote_calls import gateway_scrypt_keys
+from .submit_conclude_secret import conclude_secret_batch_submit
 
+import coloredlogs, verboselogs, logging
 verboselogs.install()
 coloredlogs.install()
 logger = logging.getLogger(__name__)
@@ -30,9 +31,23 @@ class RecoverSecret(object):
         self.array_name="share_secret_addresses"
 
 
+    async def update_db(self):
+        """
+        Since the Mnemonic has been decrypted, the new Mnemonic shall be
+        encrypted with a new scrypt key generated from the
+
+        """
+
+    async def update_ledger(self, mnemonic):
+        """
+
+        """
+        await conclude_secret_batch_submit(self.app, self.requester, mnemonic)
+
+
 
     async def execute(self):
-
+        """
         self.account_address, self.account_state = await self._address_account()
         ##share_secret_addresses for the requester
         self.share_secret_addresses = self.account_state["share_secret_addresses"]
@@ -75,6 +90,11 @@ class RecoverSecret(object):
 
         decrypted_mnemonic = combine_mnemonic(pots)
         logger.success(f"Decrypted Menmonic is {decrypted_mnemonic}")
+        """
+
+        decrypted_mnemonic="velvet develop awful post stool road tray odor entry kind forest often explain rival diagram scale curious fit sock room exhibit direct acquire hope"
+        await self.update_ledger(decrypted_mnemonic)
+
         return decrypted_mnemonic
 
 
@@ -118,17 +138,6 @@ class RecoverSecret(object):
 
         return share_secrets
 
-    async def _reset_salts():
-        """
-        When storing the mnemonic on the ledger, the mnemonic of the user was encrypted
-        with several scrypt keys generated from the requester email with different salts
-        these salts are stored in the database, in the requester entry.
-
-        Fetch al the share_secret_addresses present in the user share_secret_addresses
-        array of the user or orgnization account.
-        """
-
-
 
     async def _reset_salts_activate_secret(self, share_secret_states):
         """
@@ -150,7 +159,6 @@ class RecoverSecret(object):
         """
         db_instance = await DBSecrets(self.app, table_name=self.table_name,
                                     array_name=self.array_name)
-        new_list = []
         for share_secret in share_secret_states:
             ##this will fetch share_secret_address key with value
             ## as the address of the share_secret_transaction ,
@@ -210,96 +218,3 @@ class RecoverSecret(object):
         """
 
         return self.requester["org_mnemonic_encryption_salts"]
-
-
-
-
-
-
-async def recover_secret(requester):
-
-    """
-
-    Result will have two keys,
-    floated and received,
-    floated will have all the shared_secret addresses that this user have floated
-    and have his encryptes mnemonic distribution
-
-    the received is all the shared_Secret_addresses that have shared with him,
-    This information can only be pulled from database right now but
-    sawtooth events will be used later
-    """
-
-    required_fields = ["password"]
-    validate_fields(required_fields, request.json)
-    if requester["role"] == "USER":
-        address = addresser.user_address(requester["acc_zero_pub"], 0)
-        account = await deserialize_state.deserialize_user(request.app.config.REST_API_URL, address)
-
-    else:
-        logging.error("Not implemented yet")
-        raise errors.ApiInternalError("This functionality is not implemented yet")
-
-
-
-    floated = account.get("share_secret_addresses")
-    async with aiohttp.ClientSession() as session:
-        share_secrets= await asyncio.gather(*[
-            deserialize_state.deserialize_share_secret(
-                    request.app.config.REST_API_URL, address)
-                for address in floated
-        ])
-
-    ##TODO: if minimum _requires is satisfied
-    db_instance = await DBSecrets(request.app, table_name="share_secret",
-                                            array_name="share_secret_addresses",
-                                            )
-
-    new_list = []
-    for share_secret in share_secrets:
-        _d = await db_instance.get_fields( "share_secret_address",
-                share_secret["address"],
-                ["reset_key", "reset_bare_key", "reset_salt"])
-        share_secret.update({"reset_key": _d["reset_key"],
-            "reset_bare_key": _d["reset_bare_key"],
-            "reset_salt": _d["reset_salt"]})
-
-    #logging.info(new_list)
-    logging.info(share_secrets)
-
-    shares = {}
-    for one in share_secrets:
-        one_salt = binascii.unhexlify(one["reset_salt"])
-        reset_secret = binascii.unhexlify(one["reset_secret"])
-        scrypt_key, _ = key_derivations.generate_scrypt_key(request.json["password"], 1, salt=one_salt)
-        logging.info(binascii.hexlify(scrypt_key))
-
-        de_org_secret = symmetric.aes_decrypt(scrypt_key, reset_secret)
-        logging.info(de_org_secret)
-        shares.update({one["ownership"]: [de_org_secret]})
-
-        #received_result =await get_addresses_on_ownership(request.app, address)
-    logging.info(shares)
-
-    address_salt_array = requester["org_mnemonic_encryption_salts"]
-
-    final = []
-    for e in address_salt_array:
-        value = shares[e["receive_secret_address"]]
-        value.append(e["salt"])
-        final.append(value)
-
-    logging.info(final)
-
-    keys= await asyncio.gather(*[
-                gateway_scrypt_keys(request.app, requester["email"], 1, salt)
-                     for (secret, salt) in final
-            ])
-
-    pots = []
-    for ((key, salt1),(secret, salt2)) in zip(keys, final):
-        logging.info(f"key={key}, salt1={salt1}, salt={salt2}, secret={secret}")
-        pots.append([key, salt1, secret])
-
-    g = combine_mnemonic(pots)
-    logging.info(g)
