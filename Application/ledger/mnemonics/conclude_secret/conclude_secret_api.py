@@ -35,19 +35,20 @@ class RecoverSecret(object):
         """
         Since the Mnemonic has been decrypted, the new Mnemonic shall be
         encrypted with a new scrypt key generated from the
-
         """
+        
+
+
 
     async def update_ledger(self, mnemonic):
         """
 
         """
-        await conclude_secret_batch_submit(self.app, self.requester, mnemonic)
-
+        batch_id = await conclude_secret_batch_submit(self.app, self.requester, mnemonic)
+        return batch_id
 
 
     async def execute(self):
-        """
         self.account_address, self.account_state = await self._address_account()
         ##share_secret_addresses for the requester
         self.share_secret_addresses = self.account_state["share_secret_addresses"]
@@ -90,9 +91,8 @@ class RecoverSecret(object):
 
         decrypted_mnemonic = combine_mnemonic(pots)
         logger.success(f"Decrypted Menmonic is {decrypted_mnemonic}")
-        """
 
-        decrypted_mnemonic="velvet develop awful post stool road tray odor entry kind forest often explain rival diagram scale curious fit sock room exhibit direct acquire hope"
+        #decrypted_mnemonic="velvet develop awful post stool road tray odor entry kind forest often explain rival diagram scale curious fit sock room exhibit direct acquire hope"
         await self.update_ledger(decrypted_mnemonic)
 
         return decrypted_mnemonic

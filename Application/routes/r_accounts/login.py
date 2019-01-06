@@ -42,6 +42,8 @@ async def login(request):
         request.app.config.SECRET_KEY,
         auth_info.get('email'),
         auth_info.get('acc_zero_pub'))
+
+
     return response.json(
         {
             'authorization': token

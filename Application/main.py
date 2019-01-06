@@ -41,8 +41,13 @@ from routes.route_utils import set_password, new_account
 
 #from sanic_session import Session
 from sanic_jinja2 import SanicJinja2
+from sanic_session import Session
+
+
 
 app = Sanic(__name__)
+Session(app)  # because InMemorySessionInterface used by default
+
 import coloredlogs, logging
 coloredlogs.install()
 

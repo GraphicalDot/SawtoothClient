@@ -104,42 +104,8 @@ async def conclude_secret_batch_submit(app, requester, mnemonic):
 
     instance = await SendConcludeSecret(app.config.REST_API_URL, app.config.TIMEOUT)
     batch_id, batch_list_bytes = await instance.push_batch([e["transaction"] for e in transactions], app.config.SIGNER)
+    return batch_id
 
-    """
-    index = receive_secret.data["idx"]
-    nth_keys = await remote_calls.key_index_keys(request.app, requester_mnemonic,
-                                                        [index, 0])
-    ##now every share_Secret transaction as a key called as ownership which is
-    ##actually an addresss of the receive_Secret transaction, Now appending
-    ##public key of that receive_Secret transaction to the transaction data
-    for transaction in share_secret_transactions:
-        receive_secret = await deserialize_state.deserialize_receive_secret(app.config.REST_API_URL,
-                                transaction["ownership"])
-        transaction.update({"owner_public": receive_secret["public"]})
-
-
-
-    async with aiohttp.ClientSession() as session:
-        transactions = await asyncio.gather(*[
-              submit_activate_secret(app, transaction, password)
-                for transaction in share_secret_transactions
-        ])
-
-
-    instance = await SendActivateSecret(app.config.REST_API_URL, app.config.TIMEOUT)
-    batch_id, batch_list_bytes = await instance.push_batch([e["transaction"] for e in transactions], app.config.SIGNER)
-
-
-    try:
-        for transaction in transactions:
-            transaction.update({"batch_id": batch_id, "user_id": requester["user_id"]})
-            await db_instance.update_reset_key(app, transaction)
-
-    except Exception as e:
-        logging.error(e)
-        raise CustomError(e)
-    return True
-    """
 
 
 async def submit_conclude_secret(app, requester_address, share_secret_state, zeroth_priv, private_key):

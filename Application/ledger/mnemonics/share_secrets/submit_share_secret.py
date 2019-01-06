@@ -87,32 +87,8 @@ async def share_secret_batch_submit(app, requester, receive_secrets, nth_keys_da
     instance = await SendTransactions(app.config.REST_API_URL, app.config.TIMEOUT)
     await instance.push_n_wait(batch_bytes, batch_id)
 
+    return batch_id, transactions
 
-
-    ##must be intialized
-    db_instance = await DBSecrets(app, table_name="share_secret",
-                                        array_name="share_secret_addresses",
-                                        )
-
-
-    new_list = []
-    for trans in transactions:
-        trans.update({"batch_id": batch_id, "user_id": requester["user_id"]})
-        ##removing payload
-        trans.pop("transaction")
-        new_list.append(trans)
-        ##For production purpose this code block must be validated
-        #for transaction in transactions:
-        #    transaction.update({"batch_id": batch_id, "user_id": user_id})
-        #   [trasaction.pop(e) for e in "secret_key", "key", "secret_hash"]
-        await db_instance.store(requester["user_id"], trans)
-        await db_instance.update_array_with_value(
-                                requester["user_id"],
-                                trans.get("share_secret_address") )
-    ##updating shared_secret array of the users present in the database,
-    ##with the ownership key of every transaqction, address of the users
-    ##to whoim these transaction were addressed.
-    return transactions
 
 
 

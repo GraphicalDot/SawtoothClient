@@ -35,6 +35,11 @@ from sanic import Blueprint
 from sanic.exceptions import SanicException
 
 
+import coloredlogs, verboselogs, logging
+verboselogs.install()
+coloredlogs.install()
+logger = logging.getLogger(__name__)
+
 ERRORS_BP = Blueprint('errors')
 LOGGER = logging.getLogger(__name__)
 DEFAULT_MSGS = {
@@ -223,7 +228,10 @@ class ApiNotImplemented(ApiException):
 
 @add_status_code(500)
 class ApiInternalError(ApiException):
-    pass
+    def __init__(self, message="Error message"):
+        logger.error(message)
+        super().__init__(message)
+
 
 
 @ERRORS_BP.exception(ApiException)
