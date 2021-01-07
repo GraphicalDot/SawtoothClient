@@ -83,7 +83,7 @@ pytz==2018.5
 PyYAML==3.13
 pyzmq==17.1.2
 qtconsole==4.4.2
-requests==2.19.1
+requests==2.20.0
 rethinkdb==2.3.0.post6
 rsa==4.0
 s3transfer==0.1.13
