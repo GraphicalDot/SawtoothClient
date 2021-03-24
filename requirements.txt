@@ -85,7 +85,7 @@ pyzmq==17.1.2
 qtconsole==4.4.2
 requests==2.19.1
 rethinkdb==2.3.0.post6
-rsa==4.0
+rsa==4.1
 s3transfer==0.1.13
 sanic==0.8.3
 sawtooth-sdk==1.0.5
