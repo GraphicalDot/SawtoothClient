@@ -42,7 +42,7 @@ humanfriendly==4.16.1
 idna==2.7
 idna-ssl==1.1.0
 ipykernel==5.1.0
-ipython==6.5.0
+ipython==7.16.3
 ipython-genutils==0.2.0
 ipywidgets==7.4.2
 itsdangerous==0.24
