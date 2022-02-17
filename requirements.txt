@@ -87,7 +87,7 @@ requests==2.19.1
 rethinkdb==2.3.0.post6
 rsa==4.0
 s3transfer==0.1.13
-sanic==0.8.3
+sanic==20.12.6
 sawtooth-sdk==1.0.5
 sawtooth-signing==1.0.5
 secp256k1==0.13.2
